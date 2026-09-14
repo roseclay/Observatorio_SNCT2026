@@ -615,8 +615,8 @@
       window.history.replaceState({}, "", `perfil.html?id=${encodeURIComponent(selected.id)}`);
     }
 
-    const bio = shortText(firstText(selected.resumo, selected.abstractAI), 300);
-    const impact = shortText(buildImpactPhrase(selected), 170);
+    const bio = shortText(firstText(selected.resumo, selected.abstractAI), 210);
+    const impact = shortText(buildImpactPhrase(selected), 120);
     const lattes = lattesURL(selected);
     const photo = lattesPhotoURL(selected);
     const institution = `${selected.instituicao}${selected.sigla && selected.sigla !== selected.instituicao ? ` • ${selected.sigla}` : ""}`;

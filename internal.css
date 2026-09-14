@@ -257,10 +257,11 @@ body[data-page="perfil"] .internal-shell {
 }
 
 .paulo-template__name {
-  left: 49.2%;
-  top: 14.3%;
-  width: 43.5%;
-  height: 6.35%;
+  left: 49.05%;
+  top: 14.1%;
+  width: 43.7%;
+  height: 6.1%;
+  padding: 0 1.9cqw 0 1.45cqw;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -268,27 +269,34 @@ body[data-page="perfil"] .internal-shell {
 
 .paulo-template__name strong {
   display: block;
-  font-size: clamp(1rem, 4.55cqw, 2.7rem);
+  max-height: 2.08em;
+  font-size: clamp(.96rem, 4.25cqw, 2.52rem);
   font-weight: 900;
-  line-height: .98;
+  line-height: 1.04;
+  overflow: hidden;
 }
 
 .paulo-template__name.is-medium strong {
-  font-size: clamp(.86rem, 3.65cqw, 2.18rem);
-  line-height: 1.02;
+  font-size: clamp(.78rem, 3.3cqw, 1.96rem);
+  line-height: 1.05;
 }
 
 .paulo-template__name.is-long strong {
-  font-size: clamp(.76rem, 3.05cqw, 1.82rem);
-  line-height: 1.04;
+  font-size: clamp(.68rem, 2.72cqw, 1.62rem);
+  line-height: 1.06;
 }
 
 .paulo-template__name span {
-  margin-top: .35em;
+  display: block;
+  width: 100%;
+  margin-top: .25em;
   color: #5a4aa7;
-  font-size: clamp(.46rem, 1.36cqw, .81rem);
+  font-size: clamp(.38rem, 1.12cqw, .67rem);
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .paulo-template__field {
@@ -303,18 +311,18 @@ body[data-page="perfil"] .internal-shell {
 .paulo-template__field.is-long { font-size: clamp(.43rem, 1.32cqw, .78rem); }
 
 .paulo-template__area {
-  left: 54.2%;
-  top: 25.15%;
-  width: 14.8%;
-  height: 3.25%;
+  left: 54.85%;
+  top: 24.9%;
+  width: 13.95%;
+  height: 3.05%;
   -webkit-line-clamp: 2;
 }
 
 .paulo-template__degree {
-  left: 80.9%;
-  top: 25.35%;
-  width: 13.2%;
-  height: 3.05%;
+  left: 80.65%;
+  top: 25.08%;
+  width: 12.65%;
+  height: 2.9%;
   -webkit-line-clamp: 2;
 }
 

@@ -301,6 +301,19 @@ body.internal-page { min-height: 100svh; }
   gap: clamp(14px, 1.7vw, 20px);
 }
 
+.discovery-name-card {
+  min-height: clamp(130px, 17vw, 190px);
+  padding: clamp(18px, 2.8vw, 30px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  background: rgba(255,255,255,.64);
+  border: 2px solid rgba(255,255,255,.9);
+  border-radius: 20px;
+  box-shadow: 0 12px 26px rgba(32, 27, 101, .05);
+}
+
 .discovery-kicker {
   color: var(--magenta);
   font-size: .72rem;
@@ -309,12 +322,43 @@ body.internal-page { min-height: 100svh; }
   text-transform: uppercase;
 }
 
-.discovery-main-panel h1 {
+.discovery-name-card h1 {
   max-width: 100%;
   color: var(--blue-deep);
   font-size: clamp(2.35rem, 5vw, 5.1rem);
   line-height: .95;
   overflow-wrap: anywhere;
+}
+
+.discovery-follow {
+  min-height: 50px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  flex: 0 0 auto;
+  color: white;
+  background: linear-gradient(105deg, var(--violet), var(--magenta));
+  border: 0;
+  border-radius: 999px;
+  box-shadow: 0 12px 24px rgba(116,86,223,.2);
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.discovery-follow svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.discovery-follow[aria-pressed="true"] {
+  background: linear-gradient(105deg, var(--blue), var(--violet));
 }
 
 .discovery-fact-grid,
@@ -479,12 +523,27 @@ body.internal-page { min-height: 100svh; }
 
 .discovery-future-card {
   grid-column: 2 / 3;
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   padding: clamp(18px, 3vw, 28px);
 }
 
+.discovery-future-card::after {
+  content: "BA";
+  position: absolute;
+  right: 14px;
+  bottom: -10px;
+  color: rgba(116,86,223,.1);
+  font-size: clamp(4rem, 9vw, 7rem);
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
 .discovery-future-card p {
+  position: relative;
+  z-index: 1;
   margin: 0;
   color: var(--blue-deep);
   font-size: clamp(1.55rem, 3.2vw, 2.45rem);
@@ -657,9 +716,17 @@ body.internal-page { min-height: 100svh; }
   .technology-grid, .circulation-grid { grid-template-columns: 1fr; }
   .area-ranking, .thematic-ranking { grid-template-columns: 1fr; }
   .discovery-infographic { grid-template-columns: 1fr; border-radius: 26px; }
-  .discovery-main-panel h1 { font-size: clamp(2rem, 8vw, 3.1rem); word-break: break-word; }
+  .discovery-name-card { flex-direction: column; min-height: auto; }
+  .discovery-name-card h1 { font-size: clamp(2rem, 8vw, 3.1rem); word-break: break-word; }
+  .discovery-follow { align-self: flex-start; }
   .discovery-photo { min-height: 430px; }
-  .discovery-fact-grid, .discovery-stat-grid { grid-template-columns: 1fr; }
+  .discovery-fact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .discovery-stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .discovery-fact { grid-template-columns: 44px 1fr; padding: 13px; }
+  .discovery-stat { min-height: 118px; padding: 13px; }
+  .discovery-fact strong { font-size: .95rem; }
+  .discovery-stat strong { font-size: clamp(1.4rem, 6vw, 2.15rem); }
+  .discovery-stat span { font-size: .78rem; }
   .discovery-impact-post, .discovery-future-card { grid-column: auto; }
   .discovery-actions { flex-direction: column; }
   .discovery-actions .touch-button { width: 100%; }
@@ -681,12 +748,16 @@ body.internal-page { min-height: 100svh; }
   .discovery-infographic { padding: 15px; border-radius: 22px; }
   .discovery-photo { min-height: 360px; border-radius: 18px; }
   .discovery-photo-badge { width: calc(100% - 28px); padding: 15px 17px; }
-  .discovery-fact-grid, .discovery-stat-grid { grid-template-columns: 1fr; }
+  .discovery-fact-grid { gap: 10px; }
+  .discovery-stat-grid { gap: 8px; }
   .discovery-story-row, .discovery-fact, .discovery-impact-post { grid-template-columns: 44px 1fr; }
   .discovery-icon { width: 44px; height: 44px; border-radius: 12px; }
   .discovery-icon svg { width: 27px; height: 27px; }
   .discovery-actions { flex-direction: column; }
   .discovery-actions .touch-button { width: 100%; }
+  .discovery-fact { grid-template-columns: 1fr; align-items: start; }
+  .discovery-stat .discovery-icon { width: 38px; height: 38px; }
+  .discovery-stat .discovery-icon svg { width: 23px; height: 23px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

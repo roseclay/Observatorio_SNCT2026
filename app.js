@@ -294,6 +294,11 @@
       .sort((a, b) => a.localeCompare(b, "pt-BR"));
   }
 
+  function uniqueAreas() {
+    return [...new Set(researchers.flatMap((item) => item.areas?.length ? item.areas : [item.area]).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }
+
   function navigate(path) {
     window.location.href = path;
   }
@@ -398,6 +403,12 @@
     });
   }
 
+  function matchesSelectedFilter(item, key, value) {
+    if (!value) return true;
+    if (key === "area") return (item.areas?.length ? item.areas : [item.area]).includes(value);
+    return item[key] === value;
+  }
+
   function renderCientistas() {
     const grid = document.querySelector("#researcher-grid");
     const count = document.querySelector("#result-count");
@@ -405,7 +416,7 @@
     const listingTitle = document.querySelector("#listing-title");
     const filters = ["instituicao", "area", "tematica", "cidade"];
 
-    filters.forEach((key) => fillSelect(key, unique(key)));
+    filters.forEach((key) => fillSelect(key, key === "area" ? uniqueAreas() : unique(key)));
     const preset = filters.find((key) => params.has(key));
     if (preset) document.querySelector(`#${preset}`).value = params.get(preset);
 
@@ -422,7 +433,7 @@
           .filter(Boolean)
           .join(" ")
           .toLocaleLowerCase("pt-BR");
-        const filtersMatch = filters.every((key) => !selected[key] || item[key] === selected[key]);
+        const filtersMatch = filters.every((key) => matchesSelectedFilter(item, key, selected[key]));
         return searchable.includes(term) && filtersMatch;
       });
 
@@ -471,12 +482,14 @@
   function renderTematicas() {
     const chipRow = document.querySelector("#area-chips");
     const grid = document.querySelector("#theme-grid");
-    const areas = ["Todas as áreas", ...unique("area")];
+    const areas = ["Todas as áreas", ...uniqueAreas()];
     let activeArea = "Todas as áreas";
 
     chipRow.innerHTML = areas.map((area, index) => `<button class="chip${index === 0 ? " is-active" : ""}" type="button" data-area="${escapeHTML(area)}">${escapeHTML(area)}</button>`).join("");
     const draw = () => {
-      const subset = activeArea === "Todas as áreas" ? researchers : researchers.filter((item) => item.area === activeArea);
+      const subset = activeArea === "Todas as áreas"
+        ? researchers
+        : researchers.filter((item) => (item.areas?.length ? item.areas : [item.area]).includes(activeArea));
       const totals = subset.reduce((map, item) => map.set(item.tematica, (map.get(item.tematica) || 0) + 1), new Map());
       grid.innerHTML = [...totals]
         .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"))
@@ -631,8 +644,15 @@
         </aside>
 
         <section class="discovery-main-panel">
-          <span class="discovery-kicker">Descubra uma cientista</span>
-          <h1 id="profile-title" tabindex="-1">${escapeHTML(selected.nome)}</h1>
+          <div class="discovery-name-card">
+            <div>
+              <span class="discovery-kicker">Descubra uma cientista</span>
+              <h1 id="profile-title" tabindex="-1">${escapeHTML(selected.nome)}</h1>
+            </div>
+            <button class="discovery-follow" type="button" data-follow aria-pressed="false">
+              ${iconSVG("person")} <span data-follow-label>Seguir</span>
+            </button>
+          </div>
 
           <div class="discovery-fact-grid">
             ${factCard("flask", "Área de atuação", selected.area)}
@@ -678,6 +698,12 @@
 
     root.querySelector("[data-discover]").addEventListener("click", () => discoverResearcher(currentProfileId));
     root.querySelector("[data-link-theme]").addEventListener("click", () => navigate(`cientistas.html?tematica=${encodeURIComponent(selected.tematica)}`));
+    root.querySelector("[data-follow]")?.addEventListener("click", (event) => {
+      const button = event.currentTarget;
+      const isFollowing = button.getAttribute("aria-pressed") === "true";
+      button.setAttribute("aria-pressed", String(!isFollowing));
+      button.querySelector("[data-follow-label]").textContent = isFollowing ? "Seguir" : "Seguindo";
+    });
     root.querySelectorAll(".discovery-photo img").forEach((image) => {
       image.addEventListener("error", () => {
         const photo = image.closest("[data-photo]");

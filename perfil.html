@@ -4,9 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#10115f" />
+    <link rel="icon" href="data:," />
     <title>Perfil • Ciência Delas</title>
     <link rel="stylesheet" href="internal.css" />
-    <script src="data/pesquisadoras.js" defer></script><script src="app.js" defer></script>
+    <script src="app.js" defer></script>
   </head>
   <body class="internal-page" data-page="perfil">
     <main class="internal-shell">
@@ -14,8 +15,8 @@
         <a class="mini-brand" href="index.html" aria-label="Ciência Delas — início"><img src="assets/logo observatório sem texto.jpeg" alt="" /><span><strong>Observatório</strong> de CT&amp;I da Bahia</span></a>
         <div class="top-actions"><button class="touch-button" type="button" data-back>← <span class="button-label">Voltar</span></button><button class="touch-button touch-button--primary" type="button" data-home>⌂ <span class="button-label">Início</span></button></div>
       </nav>
-      <span class="demo-note">Perfil fictício para demonstração do layout</span>
-      <article id="profile-content"></article>
+      <div class="profile-status" id="profile-status" role="status" aria-live="polite">Carregando dados da pesquisadora...</div>
+      <article id="profile-content" aria-live="polite"></article>
     </main>
     <div class="randomizing" id="randomizing" aria-hidden="true"><div><span aria-hidden="true">✦</span><strong>Encontrando outra cientista...</strong></div></div>
   </body>

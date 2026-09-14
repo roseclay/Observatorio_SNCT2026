@@ -5,7 +5,6 @@
   const attractionButton = attraction.querySelector(".attraction__button");
   const touchFeedback = document.querySelector(".touch-feedback");
   const discoveryTransition = document.querySelector("#discovery-transition");
-  const researchers = Array.isArray(window.PESQUISADORAS) ? window.PESQUISADORAS : [];
   const routes = {
     cientistas: "cientistas.html",
     tematicas: "tematicas.html",
@@ -61,10 +60,8 @@
       console.log("Abrir seção:", section);
 
       if (section === "descubra") {
-        const selected = researchers[Math.floor(Math.random() * researchers.length)];
-        if (!selected) return;
         discoveryTransition.classList.add("is-visible");
-        window.setTimeout(() => { window.location.href = `perfil.html?id=${selected.id}`; }, 720);
+        window.setTimeout(() => { window.location.href = "perfil.html?descubra=1"; }, 720);
         return;
       }
 

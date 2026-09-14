@@ -3,6 +3,7 @@
 
   const CSV_URL = "data/pesquisadoras.csv";
   const JSON_URL = "data/dados_simcc_completo.json";
+  const PAULO_TEMPLATE_IMAGE = "assets/descubra-cientista-paulo-mobile.png";
   const INACTIVITY_DELAY = 60_000;
   const LAST_DISCOVERY_KEY = "cienciaDelasLastResearcherId";
 
@@ -567,42 +568,28 @@
     return shortText(researcher.resumo, 180);
   }
 
-  function profileImageMarkup(researcher) {
-    if (researcher.imagem) {
-      return `<img src="${escapeHTML(researcher.imagem)}" alt="Foto de ${escapeHTML(researcher.nome)}" loading="lazy" />`;
-    }
-
-    return `<div class="discovery-photo__placeholder" aria-hidden="true">
-      <span>${escapeHTML(initials(researcher.nome))}</span>
-    </div>`;
-  }
-
-  function factCard(icon, label, value) {
-    return `<article class="discovery-fact">
-      <span class="discovery-icon">${iconSVG(icon)}</span>
-      <div><span>${escapeHTML(label)}</span><strong>${escapeHTML(displayOrFallback(value))}</strong></div>
-    </article>`;
-  }
-
-  function storyRow(icon, label, value) {
-    return `<article class="discovery-story-row">
-      <span class="discovery-icon">${iconSVG(icon)}</span>
-      <div><span>${escapeHTML(label)}</span><p>${escapeHTML(displayOrFallback(value))}</p></div>
-    </article>`;
-  }
-
-  function statCard(icon, label, value) {
-    const formatted = value === null || value === undefined ? "0" : formatNumber(value);
-    return `<article class="discovery-stat">
-      <span class="discovery-icon">${iconSVG(icon)}</span>
-      <span>${escapeHTML(label)}</span>
-      <strong>${escapeHTML(formatted)}</strong>
-    </article>`;
-  }
-
   function lattesURL(researcher) {
     if (!researcher.lattesId) return null;
-    return `http://lattes.cnpq.br/${encodeURIComponent(researcher.lattesId)}`;
+    return `https://lattes.cnpq.br/${encodeURIComponent(researcher.lattesId)}`;
+  }
+
+  function lattesPhotoURL(researcher) {
+    if (researcher.imagem) return researcher.imagem;
+    if (!researcher.lattes10Id) return null;
+    return `https://servicosweb.cnpq.br/wspessoa/servletrecuperafoto?tipo=1&id=${encodeURIComponent(researcher.lattes10Id)}`;
+  }
+
+  function textFitClass(value, mediumAt = 40, longAt = 90) {
+    const length = displayOrFallback(value).length;
+    if (length >= longAt) return " is-long";
+    if (length >= mediumAt) return " is-medium";
+    return "";
+  }
+
+  function pauloTextField(name, value, label, options = {}) {
+    const tag = options.tag || "p";
+    const classes = `paulo-template__field paulo-template__${name}${textFitClass(value, options.mediumAt, options.longAt)}`;
+    return `<${tag} class="${classes}" aria-label="${escapeHTML(label)}">${escapeHTML(displayOrFallback(value))}</${tag}>`;
   }
 
   function renderProfile(targetResearcher = null, updateHistory = false) {
@@ -628,86 +615,66 @@
       window.history.replaceState({}, "", `perfil.html?id=${encodeURIComponent(selected.id)}`);
     }
 
-    const bio = shortText(selected.resumo, 560);
+    const bio = shortText(firstText(selected.resumo, selected.abstractAI), 300);
+    const impact = shortText(buildImpactPhrase(selected), 170);
     const lattes = lattesURL(selected);
+    const photo = lattesPhotoURL(selected);
+    const institution = `${selected.instituicao}${selected.sigla && selected.sigla !== selected.instituicao ? ` • ${selected.sigla}` : ""}`;
+    const profileMeta = [selected.sigla, selected.cidade].filter(Boolean).join(" • ");
+    const publications = selected.artigos ?? selected.trabalhos;
+    const themeAction = selected.tematica && selected.tematica !== "Temática não informada"
+      ? `<button class="touch-button" type="button" data-link-theme>${iconSVG("flask")} <span>Mesma temática</span></button>`
+      : "";
+    const photoMarkup = photo
+      ? `<img src="${escapeHTML(photo)}" alt="Foto de ${escapeHTML(selected.nome)}" loading="eager" decoding="async" />`
+      : `<span class="sr-only">Foto não disponível no Lattes.</span>`;
 
-    root.innerHTML = `<article class="discovery-profile" aria-labelledby="profile-title">
-      <section class="discovery-infographic">
-        <div class="discovery-network discovery-network--top" aria-hidden="true"></div>
-        <div class="discovery-network discovery-network--bottom" aria-hidden="true"></div>
-
-        <aside class="discovery-portrait-panel">
-          <div class="discovery-photo" data-photo>
-            ${profileImageMarkup(selected)}
-          </div>
-          <div class="discovery-photo-badge">Mulheres que movem a ciência</div>
-        </aside>
-
-        <section class="discovery-main-panel">
-          <div class="discovery-name-card">
-            <div>
-              <span class="discovery-kicker">Descubra uma cientista</span>
-              <h1 id="profile-title" tabindex="-1">${escapeHTML(selected.nome)}</h1>
-            </div>
-            <button class="discovery-follow" type="button" data-follow aria-pressed="false">
-              ${iconSVG("person")} <span data-follow-label>Seguir</span>
-            </button>
-          </div>
-
-          <div class="discovery-fact-grid">
-            ${factCard("flask", "Área de atuação", selected.area)}
-            ${factCard("degree", "Grau de formação", selected.graduacao)}
-          </div>
-
-          <div class="discovery-story-stack">
-            ${storyRow("document", "Sobre a pesquisadora", bio)}
-            ${storyRow("institution", "Instituição", `${selected.instituicao}${selected.sigla && selected.sigla !== selected.instituicao ? ` • ${selected.sigla}` : ""}`)}
-            ${storyRow("location", "Cidade de atuação", selected.cidade)}
-          </div>
-
-          <div class="discovery-stat-grid">
-            ${statCard("document", "Publicações", selected.artigos)}
-            ${statCard("quote", "Citações", selected.citacoes)}
-            ${statCard("chart", "Índice h", selected.indiceH)}
-          </div>
-
-          <div class="discovery-actions">
-            <button class="touch-button touch-button--primary" type="button" data-discover>
-              ${iconSVG("spark")} <span>Conheça outra pesquisadora</span>
-            </button>
-            <button class="touch-button" type="button" data-link-theme>
-              ${iconSVG("flask")} <span>Mesma temática</span>
-            </button>
-            ${lattes ? `<a class="touch-button" href="${escapeHTML(lattes)}" target="_blank" rel="noopener">${iconSVG("bookmark")} <span>Currículo Lattes</span></a>` : ""}
-          </div>
-        </section>
-
-        <article class="discovery-impact-post">
-          <span class="discovery-icon">${iconSVG("megaphone")}</span>
-          <div>
-            <span>Post fixado</span>
-            <p>${escapeHTML(buildImpactPhrase(selected))}</p>
-          </div>
-        </article>
-
-        <article class="discovery-future-card">
-          <p>Mais mulheres<br />na ciência.<br /><strong>Mais futuro<br />para a Bahia.</strong></p>
-        </article>
+    root.innerHTML = `<article class="paulo-profile" aria-labelledby="profile-title">
+      <section class="paulo-template" aria-label="Infográfico Descubra uma cientista">
+        <img class="paulo-template__base" src="${PAULO_TEMPLATE_IMAGE}" alt="" aria-hidden="true" decoding="async" />
+        <div class="paulo-template__photo" data-photo>${photoMarkup}</div>
+        <div class="paulo-template__name${textFitClass(selected.nome, 28, 46)}" id="profile-title" tabindex="-1">
+          <strong>${escapeHTML(selected.nome)}</strong>
+          ${profileMeta ? `<span>${escapeHTML(profileMeta)}</span>` : ""}
+        </div>
+        ${pauloTextField("area", selected.area, "Área de atuação", { mediumAt: 22, longAt: 40 })}
+        ${pauloTextField("degree", selected.graduacao, "Grau de formação", { mediumAt: 20, longAt: 34 })}
+        ${pauloTextField("bio", bio, "Sobre a pesquisadora", { mediumAt: 160, longAt: 250 })}
+        ${pauloTextField("institution", institution, "Instituição", { mediumAt: 42, longAt: 78 })}
+        ${pauloTextField("city", selected.cidade, "Cidade de atuação", { mediumAt: 24, longAt: 42 })}
+        ${pauloTextField("publications", publications === null || publications === undefined ? "0" : formatNumber(publications), "Publicações", { tag: "strong", mediumAt: 6, longAt: 10 })}
+        ${pauloTextField("citations", selected.citacoes === null || selected.citacoes === undefined ? "0" : formatNumber(selected.citacoes), "Citações", { tag: "strong", mediumAt: 6, longAt: 10 })}
+        ${pauloTextField("hindex", selected.indiceH === null || selected.indiceH === undefined ? "0" : formatNumber(selected.indiceH), "Índice h", { tag: "strong", mediumAt: 4, longAt: 7 })}
+        ${pauloTextField("post", impact, "Post fixado", { mediumAt: 92, longAt: 135 })}
+        <dl class="sr-only">
+          <dt>Nome</dt><dd>${escapeHTML(selected.nome)}</dd>
+          <dt>Área de atuação</dt><dd>${escapeHTML(displayOrFallback(selected.area))}</dd>
+          <dt>Grau de formação</dt><dd>${escapeHTML(displayOrFallback(selected.graduacao))}</dd>
+          <dt>Sobre a pesquisadora</dt><dd>${escapeHTML(bio)}</dd>
+          <dt>Instituição</dt><dd>${escapeHTML(displayOrFallback(institution))}</dd>
+          <dt>Cidade de atuação</dt><dd>${escapeHTML(displayOrFallback(selected.cidade))}</dd>
+          <dt>Publicações</dt><dd>${escapeHTML(publications === null || publications === undefined ? "0" : formatNumber(publications))}</dd>
+          <dt>Citações</dt><dd>${escapeHTML(selected.citacoes === null || selected.citacoes === undefined ? "0" : formatNumber(selected.citacoes))}</dd>
+          <dt>Índice h</dt><dd>${escapeHTML(selected.indiceH === null || selected.indiceH === undefined ? "0" : formatNumber(selected.indiceH))}</dd>
+        </dl>
       </section>
+
+      <div class="paulo-profile__controls">
+        <button class="touch-button touch-button--primary" type="button" data-discover>
+          ${iconSVG("spark")} <span>Conheça outra pesquisadora</span>
+        </button>
+        ${themeAction}
+        ${lattes ? `<a class="touch-button" href="${escapeHTML(lattes)}" target="_blank" rel="noopener">${iconSVG("bookmark")} <span>Currículo Lattes</span></a>` : ""}
+      </div>
     </article>`;
 
     root.querySelector("[data-discover]").addEventListener("click", () => discoverResearcher(currentProfileId));
-    root.querySelector("[data-link-theme]").addEventListener("click", () => navigate(`cientistas.html?tematica=${encodeURIComponent(selected.tematica)}`));
-    root.querySelector("[data-follow]")?.addEventListener("click", (event) => {
-      const button = event.currentTarget;
-      const isFollowing = button.getAttribute("aria-pressed") === "true";
-      button.setAttribute("aria-pressed", String(!isFollowing));
-      button.querySelector("[data-follow-label]").textContent = isFollowing ? "Seguir" : "Seguindo";
-    });
-    root.querySelectorAll(".discovery-photo img").forEach((image) => {
+    root.querySelector("[data-link-theme]")?.addEventListener("click", () => navigate(`cientistas.html?tematica=${encodeURIComponent(selected.tematica)}`));
+    root.querySelectorAll(".paulo-template__photo img").forEach((image) => {
       image.addEventListener("error", () => {
         const photo = image.closest("[data-photo]");
-        photo.innerHTML = `<div class="discovery-photo__placeholder" aria-hidden="true"><span>${escapeHTML(initials(selected.nome))}</span></div>`;
+        photo.classList.add("is-empty");
+        photo.innerHTML = '<span class="sr-only">Foto não disponível no Lattes.</span>';
       }, { once: true });
     });
 

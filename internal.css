@@ -253,14 +253,16 @@ body[data-page="perfil"] .internal-shell {
   color: var(--blue-deep);
   letter-spacing: 0;
   overflow: hidden;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
 }
 
 .paulo-template__name {
   left: 49.05%;
-  top: 14.1%;
+  top: 13.75%;
   width: 43.7%;
-  height: 6.1%;
+  height: 6.95%;
   padding: 0 1.9cqw 0 1.45cqw;
   display: flex;
   flex-direction: column;
@@ -269,21 +271,23 @@ body[data-page="perfil"] .internal-shell {
 
 .paulo-template__name strong {
   display: block;
-  max-height: 2.08em;
-  font-size: clamp(.96rem, 4.25cqw, 2.52rem);
+  max-height: 2.65em;
+  font-size: clamp(.9rem, 3.95cqw, 2.34rem);
   font-weight: 900;
-  line-height: 1.04;
+  line-height: 1.12;
   overflow: hidden;
 }
 
 .paulo-template__name.is-medium strong {
-  font-size: clamp(.78rem, 3.3cqw, 1.96rem);
-  line-height: 1.05;
+  max-height: 2.72em;
+  font-size: clamp(.74rem, 3cqw, 1.78rem);
+  line-height: 1.12;
 }
 
 .paulo-template__name.is-long strong {
-  font-size: clamp(.68rem, 2.72cqw, 1.62rem);
-  line-height: 1.06;
+  max-height: 3.3em;
+  font-size: clamp(.58rem, 2.2cqw, 1.32rem);
+  line-height: 1.1;
 }
 
 .paulo-template__name span {
@@ -305,25 +309,30 @@ body[data-page="perfil"] .internal-shell {
   font-size: clamp(.58rem, 1.92cqw, 1.14rem);
   font-weight: 800;
   line-height: 1.16;
+  text-wrap: balance;
 }
 
 .paulo-template__field.is-medium { font-size: clamp(.53rem, 1.72cqw, 1rem); }
 .paulo-template__field.is-long { font-size: clamp(.49rem, 1.5cqw, .9rem); }
+.paulo-template__field.is-empty { visibility: hidden; }
 
 .paulo-template__area {
-  left: 54.3%;
-  top: 24.95%;
-  width: 15.25%;
-  height: 3.25%;
-  white-space: nowrap;
-  -webkit-line-clamp: 1;
+  left: 54%;
+  top: 24.7%;
+  width: 16.6%;
+  height: 4.25%;
+  line-height: 1.08;
+  overflow-wrap: normal;
+  text-wrap: wrap;
+  hyphens: none;
+  -webkit-line-clamp: 2;
 }
 
 .paulo-template__degree {
-  left: 80.25%;
-  top: 24.9%;
-  width: 14.2%;
-  height: 3.45%;
+  left: 79.2%;
+  top: 24.68%;
+  width: 15.2%;
+  height: 4.15%;
   line-height: 1.08;
   overflow-wrap: normal;
   -webkit-line-clamp: 2;

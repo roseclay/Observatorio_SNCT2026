@@ -5,6 +5,11 @@
   const JSON_URL = "data/dados_simcc_completo.json";
   const PAULO_TEMPLATE_IMAGE = "assets/descubra-cientista-paulo-mobile-v2.png";
   const INACTIVITY_DELAY = 60_000;
+  const SHOWCASE_METRIC_THRESHOLDS = {
+    publications: 10,
+    citations: 100,
+    hindex: 5
+  };
   const LAST_DISCOVERY_KEY = "cienciaDelasLastResearcherId";
 
   const page = document.body.dataset.page;
@@ -543,7 +548,9 @@
 
   function chooseRandomResearcher(excludedId = null) {
     const lastId = excludedId || sessionStorage.getItem(LAST_DISCOVERY_KEY);
-    const options = researchers.filter((item) => String(item.id) !== String(lastId));
+    const options = researchers
+      .filter((item) => String(item.id) !== String(lastId))
+      .filter(hasShowcaseMetrics);
     const pool = options.length ? options : researchers;
     const selected = pool[Math.floor(Math.random() * pool.length)];
     if (selected) sessionStorage.setItem(LAST_DISCOVERY_KEY, selected.id);
@@ -602,16 +609,53 @@
   }
 
   function textFitClass(value, mediumAt = 40, longAt = 90) {
-    const length = displayOrFallback(value).length;
-    if (length >= longAt) return " is-long";
-    if (length >= mediumAt) return " is-medium";
+    const text = displayOrFallback(value);
+    const length = text.length;
+    const longestWord = text.split(/\s+/).reduce((max, word) => Math.max(max, word.length), 0);
+    if (length >= longAt || longestWord >= 18) return " is-long";
+    if (length >= mediumAt || longestWord >= 13) return " is-medium";
     return "";
   }
 
   function pauloTextField(name, value, label, options = {}) {
     const tag = options.tag || "p";
-    const classes = `paulo-template__field paulo-template__${name}${textFitClass(value, options.mediumAt, options.longAt)}`;
-    return `<${tag} class="${classes}" aria-label="${escapeHTML(label)}">${escapeHTML(displayOrFallback(value))}</${tag}>`;
+    const extraClass = options.className ? ` ${options.className}` : "";
+    const displayValue = options.allowEmpty && !validText(value) ? "" : displayOrFallback(value);
+    const classes = `paulo-template__field paulo-template__${name}${textFitClass(value, options.mediumAt, options.longAt)}${extraClass}`;
+    return `<${tag} class="${classes}" aria-label="${escapeHTML(label)}">${escapeHTML(displayValue)}</${tag}>`;
+  }
+
+  function metricNumber(researcher, key) {
+    if (key === "publications") return researcher.artigos ?? researcher.trabalhos;
+    if (key === "citations") return researcher.citacoes;
+    if (key === "hindex") return researcher.indiceH;
+    return null;
+  }
+
+  function showcaseMetricValue(researcher, key) {
+    const value = metricNumber(researcher, key);
+    const threshold = SHOWCASE_METRIC_THRESHOLDS[key] ?? 0;
+    return Number.isFinite(value) && value >= threshold ? formatNumber(value) : "";
+  }
+
+  function visibleShowcaseMetricCount(researcher) {
+    return Object.keys(SHOWCASE_METRIC_THRESHOLDS)
+      .filter((key) => showcaseMetricValue(researcher, key))
+      .length;
+  }
+
+  function hasShowcaseMetrics(researcher) {
+    return visibleShowcaseMetricCount(researcher) >= 2;
+  }
+
+  function pauloMetricField(name, value, label) {
+    return pauloTextField(name, value, label, {
+      tag: "strong",
+      mediumAt: 6,
+      longAt: 10,
+      className: value ? "" : "is-empty",
+      allowEmpty: true
+    });
   }
 
   function renderProfile(targetResearcher = null, updateHistory = false) {
@@ -642,7 +686,9 @@
     const photo = lattesPhotoURL(selected);
     const institution = `${selected.instituicao}${selected.sigla && selected.sigla !== selected.instituicao ? ` • ${selected.sigla}` : ""}`;
     const profileMeta = [selected.sigla, selected.cidade].filter(Boolean).join(" • ");
-    const publications = selected.artigos ?? selected.trabalhos;
+    const publications = showcaseMetricValue(selected, "publications");
+    const citations = showcaseMetricValue(selected, "citations");
+    const hindex = showcaseMetricValue(selected, "hindex");
     const themeAction = selected.tematica && selected.tematica !== "Temática não informada"
       ? `<button class="touch-button" type="button" data-link-theme>${iconSVG("flask")} <span>Mesma temática</span></button>`
       : "";
@@ -654,7 +700,7 @@
       <section class="paulo-template" aria-label="Infográfico Descubra uma cientista">
         <img class="paulo-template__base" src="${PAULO_TEMPLATE_IMAGE}" alt="" aria-hidden="true" decoding="async" />
         <div class="paulo-template__photo" data-photo>${photoMarkup}</div>
-        <div class="paulo-template__name${textFitClass(selected.nome, 28, 46)}" id="profile-title" tabindex="-1">
+        <div class="paulo-template__name${textFitClass(selected.nome, 22, 42)}" id="profile-title" tabindex="-1">
           <strong>${escapeHTML(selected.nome)}</strong>
           ${profileMeta ? `<span>${escapeHTML(profileMeta)}</span>` : ""}
         </div>
@@ -663,9 +709,9 @@
         ${pauloTextField("bio", bio, "Sobre a pesquisadora", { mediumAt: 160, longAt: 250 })}
         ${pauloTextField("institution", institution, "Instituição", { mediumAt: 42, longAt: 78 })}
         ${pauloTextField("city", selected.cidade, "Cidade de atuação", { mediumAt: 24, longAt: 42 })}
-        ${pauloTextField("publications", publications === null || publications === undefined ? "0" : formatNumber(publications), "Publicações", { tag: "strong", mediumAt: 6, longAt: 10 })}
-        ${pauloTextField("citations", selected.citacoes === null || selected.citacoes === undefined ? "0" : formatNumber(selected.citacoes), "Citações", { tag: "strong", mediumAt: 6, longAt: 10 })}
-        ${pauloTextField("hindex", selected.indiceH === null || selected.indiceH === undefined ? "0" : formatNumber(selected.indiceH), "Índice h", { tag: "strong", mediumAt: 4, longAt: 7 })}
+        ${pauloMetricField("publications", publications, "Publicações destacadas")}
+        ${pauloMetricField("citations", citations, "Citações destacadas")}
+        ${pauloMetricField("hindex", hindex, "Índice h destacado")}
         ${pauloTextField("post", highlight, "Destaques", { mediumAt: 82, longAt: 112 })}
         <dl class="sr-only">
           <dt>Nome</dt><dd>${escapeHTML(selected.nome)}</dd>
@@ -674,9 +720,9 @@
           <dt>Sobre a pesquisadora</dt><dd>${escapeHTML(bio)}</dd>
           <dt>Instituição</dt><dd>${escapeHTML(displayOrFallback(institution))}</dd>
           <dt>Cidade de atuação</dt><dd>${escapeHTML(displayOrFallback(selected.cidade))}</dd>
-          <dt>Publicações</dt><dd>${escapeHTML(publications === null || publications === undefined ? "0" : formatNumber(publications))}</dd>
-          <dt>Citações</dt><dd>${escapeHTML(selected.citacoes === null || selected.citacoes === undefined ? "0" : formatNumber(selected.citacoes))}</dd>
-          <dt>Índice h</dt><dd>${escapeHTML(selected.indiceH === null || selected.indiceH === undefined ? "0" : formatNumber(selected.indiceH))}</dd>
+          <dt>Publicações destacadas</dt><dd>${escapeHTML(publications || "Não exibido no totem")}</dd>
+          <dt>Citações destacadas</dt><dd>${escapeHTML(citations || "Não exibido no totem")}</dd>
+          <dt>Índice h destacado</dt><dd>${escapeHTML(hindex || "Não exibido no totem")}</dd>
         </dl>
       </section>
 

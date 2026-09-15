@@ -838,6 +838,7 @@
 
   function addLoveFor(id) {
     const counts = readLoveCounts();
+    if (Number(counts[id] || 0) > 0) return null;
     counts[id] = Number(counts[id] || 0) + 1;
     try {
       localStorage.setItem(LOVE_STORAGE_KEY, JSON.stringify(counts));
@@ -849,7 +850,7 @@
 
   function loveButtonMarkup(researcher) {
     const count = loveCountFor(researcher.id);
-    return `<button class="paulo-template__love-button" type="button" data-love aria-label="Dar Amei para ${escapeHTML(researcher.nome)}">
+    return `<button class="paulo-template__love-button${count ? " is-loved" : ""}" type="button" data-love aria-label="Dar Amei para ${escapeHTML(researcher.nome)}"${count ? " disabled" : ""}>
       ${iconSVG("heart")}
       <span>Amei</span>
       <strong data-love-count>${count ? escapeHTML(formatNumber(count)) : ""}</strong>
@@ -936,7 +937,12 @@
     root.querySelector("[data-love]")?.addEventListener("click", (event) => {
       const button = event.currentTarget;
       const total = addLoveFor(selected.id);
+      if (total === null) {
+        if (status) status.textContent = `${selected.nome} já recebeu seu Amei neste acesso.`;
+        return;
+      }
       button.classList.add("is-loved", "is-pulsing");
+      button.disabled = true;
       button.querySelector("[data-love-count]").textContent = formatNumber(total);
       if (status) status.textContent = `${selected.nome} recebeu um Amei.`;
       window.setTimeout(() => button.classList.remove("is-pulsing"), 420);

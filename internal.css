@@ -506,6 +506,10 @@ body[data-page="perfil"] .internal-shell {
 }
 
 .paulo-template__love-button.is-loved svg { fill: currentColor; }
+.paulo-template__love-button:disabled {
+  cursor: default;
+  opacity: .92;
+}
 .paulo-template__love-button.is-pulsing { animation: love-pop .42s ease; }
 
 .paulo-template__field {
@@ -665,13 +669,13 @@ body[data-page="perfil"] .internal-shell {
 .paulo-template__metric-card {
   position: absolute;
   z-index: 5;
-  top: 57.95%;
-  height: 18.2%;
+  top: 58.7%;
+  height: 13.35%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 1.4cqw;
-  padding: 2.1cqw 1.55cqw 2.35cqw;
+  gap: 1cqw;
+  padding: 1.65cqw 1.35cqw 1.75cqw;
   background: linear-gradient(145deg, #ffffff, #f4f8ff);
   border: 1px solid rgba(255,255,255,.92);
   border-radius: 1.35cqw;
@@ -682,16 +686,16 @@ body[data-page="perfil"] .internal-shell {
   min-width: 0;
   display: flex;
   align-items: flex-start;
-  gap: .95cqw;
+  gap: .75cqw;
   color: #10115f;
-  font-size: clamp(.52rem, 1.34cqw, .8rem);
+  font-size: clamp(.5rem, 1.2cqw, .72rem);
   font-weight: 900;
   line-height: 1.12;
 }
 
 .paulo-template__metric-head svg {
-  width: clamp(.95rem, 3.1cqw, 1.85rem);
-  height: clamp(.95rem, 3.1cqw, 1.85rem);
+  width: clamp(.9rem, 2.65cqw, 1.58rem);
+  height: clamp(.9rem, 2.65cqw, 1.58rem);
   flex: 0 0 auto;
   fill: none;
   stroke: currentColor;
@@ -711,40 +715,40 @@ body[data-page="perfil"] .internal-shell {
 .paulo-template__metric-card strong {
   display: block;
   color: #10115f;
-  font-size: clamp(1.55rem, 5.4cqw, 3.2rem);
+  font-size: clamp(1.35rem, 4.7cqw, 2.8rem);
   font-weight: 950;
   line-height: .9;
   text-align: center;
 }
 
 .paulo-template__metric-card--count1-0 {
-  left: 34.9%;
-  width: 27.05%;
+  left: 37.55%;
+  width: 24.9%;
 }
 
 .paulo-template__metric-card--count2-0 {
-  left: 19.35%;
-  width: 27.05%;
+  left: 21.2%;
+  width: 24.9%;
 }
 
 .paulo-template__metric-card--count2-1 {
-  left: 50.65%;
-  width: 27.05%;
+  left: 53.9%;
+  width: 24.9%;
 }
 
 .paulo-template__metric-card--count3-0 {
-  left: 3.85%;
-  width: 27.05%;
+  left: 4.4%;
+  width: 24.9%;
 }
 
 .paulo-template__metric-card--count3-1 {
-  left: 34.9%;
-  width: 27.05%;
+  left: 37.55%;
+  width: 24.9%;
 }
 
 .paulo-template__metric-card--count3-2 {
-  left: 66.05%;
-  width: 27.05%;
+  left: 70.7%;
+  width: 24.9%;
 }
 
 .paulo-template__institution {

@@ -8,9 +8,7 @@
   const routes = {
     cientistas: "cientistas.html",
     tematicas: "tematicas.html",
-    mapa: "territorio.html",
-    numeros: "numeros.html",
-    destaques: "cientistas.html?ordem=destaques"
+    numeros: "numeros.html"
   };
   let attractionTimer;
   let lastFocusedElement = null;

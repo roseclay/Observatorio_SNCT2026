@@ -11,6 +11,17 @@
     hindex: 5
   };
   const LAST_DISCOVERY_KEY = "cienciaDelasLastResearcherId";
+  const LOVE_STORAGE_KEY = "cienciaDelasLoveCounts";
+  const PRIMARY_METRICS = [
+    { key: "publications", label: "Publicações", icon: "document", threshold: SHOWCASE_METRIC_THRESHOLDS.publications },
+    { key: "citations", label: "Citações", icon: "quote", threshold: SHOWCASE_METRIC_THRESHOLDS.citations },
+    { key: "hindex", label: "Índice h", icon: "chart", threshold: SHOWCASE_METRIC_THRESHOLDS.hindex }
+  ];
+  const FALLBACK_METRICS = [
+    { key: "books", label: "Livros", icon: "book", threshold: 1 },
+    { key: "patents", label: "Patentes", icon: "patent", threshold: 1 },
+    { key: "programs", label: "Programas de computador", icon: "code", threshold: 1 }
+  ];
 
   const page = document.body.dataset.page;
   const params = new URLSearchParams(window.location.search);
@@ -332,6 +343,10 @@
       location: '<path d="M16 29S7 21 7 13a9 9 0 1 1 18 0c0 8-9 16-9 16Z"/><circle cx="16" cy="13" r="3"/>',
       quote: '<path d="M12 10H7v6h4v2c0 2-1 3-4 4M25 10h-5v6h4v2c0 2-1 3-4 4"/>',
       chart: '<path d="M5 27V17h6v10m5 0V6h6v21m5 0V12h-5"/><path d="M3 27h26"/>',
+      book: '<path d="M7 5h10a4 4 0 0 1 4 4v18H10a3 3 0 0 0-3 3V5Z"/><path d="M21 5h3a2 2 0 0 1 2 2v20h-5"/>',
+      patent: '<path d="M9 4h14v24H9V4Z"/><path d="M13 9h6m-6 5h6m-6 5h4"/><path d="m19 22 2 2 4-5"/>',
+      code: '<path d="m11 10-5 6 5 6M21 10l5 6-5 6M18 7l-4 18"/>',
+      heart: '<path d="M16 28S5 21.5 5 12.5A6.5 6.5 0 0 1 16 8a6.5 6.5 0 0 1 11 4.5C27 21.5 16 28 16 28Z"/>',
       bookmark: '<path d="M9 4h14v25l-7-4-7 4V4Z"/>',
       spark: '<path d="M16 2v6m0 16v6M2 16h6m16 0h6M6 6l4 4m12 12 4 4M26 6l-4 4M10 22l-4 4"/><circle cx="16" cy="16" r="5"/>',
       megaphone: '<path d="M4 18v-5h5l12-6v17L9 18H4Zm5 0l2 8h4l-2-7"/>'
@@ -378,10 +393,30 @@
     }
   }
 
+  function avatarMarkup(researcher, className = "avatar") {
+    const fallback = escapeHTML(initials(researcher.nome));
+    const photo = lattesPhotoURL(researcher);
+    if (!photo) return `<span class="${className}" aria-hidden="true"><span>${fallback}</span></span>`;
+
+    return `<span class="${className} has-photo" aria-hidden="true">
+      <img src="${escapeHTML(photo)}" alt="" loading="lazy" decoding="async" />
+      <span>${fallback}</span>
+    </span>`;
+  }
+
+  function bindAvatarFallbacks(container = document) {
+    container.querySelectorAll(".avatar img, .researcher-icon__photo img").forEach((image) => {
+      image.addEventListener("error", () => {
+        image.remove();
+        image.closest(".has-photo")?.classList.remove("has-photo");
+      }, { once: true });
+    });
+  }
+
   function renderResearcherCard(researcher) {
     return `
       <button class="researcher-card" type="button" data-researcher-id="${escapeHTML(researcher.id)}" aria-label="Conheça a trajetória de ${escapeHTML(researcher.nome)}">
-        <span class="avatar" aria-hidden="true">${escapeHTML(initials(researcher.nome))}</span>
+        ${avatarMarkup(researcher)}
         <span class="researcher-card__info">
           <span class="researcher-card__institution">${escapeHTML(displayOrFallback(researcher.sigla))}</span>
           <h3>${escapeHTML(researcher.nome)}</h3>
@@ -398,6 +433,7 @@
     container.querySelectorAll("[data-researcher-id]").forEach((card) => {
       card.addEventListener("click", () => openProfile(card.dataset.researcherId));
     });
+    bindAvatarFallbacks(container);
   }
 
   function fillSelect(id, values) {
@@ -415,50 +451,88 @@
     return item[key] === value;
   }
 
+  function institutionGroups() {
+    const groups = researchers.reduce((map, item) => {
+      const label = displayOrFallback(item.instituicao);
+      const group = map.get(label) || { count: 0, sigla: item.sigla, label };
+      group.count += 1;
+      if (!group.sigla && item.sigla) group.sigla = item.sigla;
+      map.set(label, group);
+      return map;
+    }, new Map());
+
+    return [...groups.values()].sort((a, b) => a.label.localeCompare(b.label, "pt-BR"));
+  }
+
+  function institutionMark(group) {
+    const sigla = displayOrFallback(group.sigla);
+    if (sigla.length <= 10) return sigla;
+    return initials(sigla || group.label);
+  }
+
   function renderCientistas() {
     const grid = document.querySelector("#researcher-grid");
     const count = document.querySelector("#result-count");
     const search = document.querySelector("#search");
     const listingTitle = document.querySelector("#listing-title");
-    const filters = ["instituicao", "area", "tematica", "cidade"];
+    const institutionGrid = document.querySelector("#institution-grid");
+    const institutionCount = document.querySelector("#institution-count");
+    const groups = institutionGroups();
+    let selectedInstitution = params.get("instituicao") || "";
 
-    filters.forEach((key) => fillSelect(key, key === "area" ? uniqueAreas() : unique(key)));
-    const preset = filters.find((key) => params.has(key));
-    if (preset) document.querySelector(`#${preset}`).value = params.get(preset);
-
-    if (params.has("tematica")) listingTitle.textContent = `Mulheres que pesquisam ${params.get("tematica")}`;
-    if (params.has("instituicao")) listingTitle.textContent = `Mulheres cientistas da ${params.get("instituicao")}`;
-    if (params.has("cidade")) listingTitle.textContent = `Mulheres cientistas em ${params.get("cidade")}`;
-    if (params.get("ordem") === "destaques") listingTitle.textContent = "Destaques da ciência";
+    const renderInstitutions = () => {
+      if (!institutionGrid) return;
+      if (institutionCount) {
+        institutionCount.textContent = `${groups.length} ${groups.length === 1 ? "instituição" : "instituições"}`;
+      }
+      const allButton = `<button class="institution-tile${selectedInstitution ? "" : " is-active"}" type="button" data-institution="">
+        <span class="institution-tile__mark" aria-hidden="true">BA</span>
+        <strong>Todas</strong>
+        <span>${researchers.length} pesquisadoras</span>
+      </button>`;
+      institutionGrid.innerHTML = allButton + groups.map((group) => `<button class="institution-tile${group.label === selectedInstitution ? " is-active" : ""}" type="button" data-institution="${escapeHTML(group.label)}">
+        <span class="institution-tile__mark" aria-hidden="true">${escapeHTML(institutionMark(group))}</span>
+        <strong>${escapeHTML(displayOrFallback(group.sigla))}</strong>
+        <span>${escapeHTML(group.label)}</span>
+      </button>`).join("");
+      institutionGrid.querySelectorAll("[data-institution]").forEach((button) => {
+        button.addEventListener("click", () => {
+          selectedInstitution = button.dataset.institution;
+          const nextURL = selectedInstitution ? `cientistas.html?instituicao=${encodeURIComponent(selectedInstitution)}` : "cientistas.html";
+          window.history.replaceState({}, "", nextURL);
+          applyFilters();
+        });
+      });
+    };
 
     const applyFilters = () => {
       const term = search.value.trim().toLocaleLowerCase("pt-BR");
-      const selected = Object.fromEntries(filters.map((key) => [key, document.querySelector(`#${key}`).value]));
-      let filtered = researchers.filter((item) => {
+      const selectedGroup = groups.find((group) => group.label === selectedInstitution);
+      listingTitle.textContent = selectedGroup
+        ? `Mulheres cientistas da ${displayOrFallback(selectedGroup.sigla)}`
+        : "Conheça as cientistas";
+
+      const filtered = researchers.filter((item) => {
         const searchable = [item.nome, item.instituicao, item.sigla, item.area, item.tematica, item.cidade, item.tema]
           .filter(Boolean)
           .join(" ")
           .toLocaleLowerCase("pt-BR");
-        const filtersMatch = filters.every((key) => matchesSelectedFilter(item, key, selected[key]));
-        return searchable.includes(term) && filtersMatch;
+        const institutionMatch = !selectedInstitution || item.instituicao === selectedInstitution;
+        return searchable.includes(term) && institutionMatch;
       });
-
-      if (params.get("ordem") === "destaques") {
-        filtered = filtered.sort((a, b) => (b.artigos || 0) - (a.artigos || 0));
-      }
 
       count.textContent = `${filtered.length} ${filtered.length === 1 ? "pesquisadora encontrada" : "pesquisadoras encontradas"}`;
       grid.innerHTML = filtered.length
         ? filtered.map(renderResearcherCard).join("")
         : '<div class="empty-state"><h3>Nenhum resultado encontrado</h3><p>Tente ajustar ou limpar os filtros.</p></div>';
       bindResearcherCards(grid);
+      renderInstitutions();
     };
 
     search.addEventListener("input", applyFilters);
-    filters.forEach((key) => document.querySelector(`#${key}`).addEventListener("change", applyFilters));
     document.querySelector("#clear-filters").addEventListener("click", () => {
       search.value = "";
-      filters.forEach((key) => { document.querySelector(`#${key}`).value = ""; });
+      selectedInstitution = "";
       window.history.replaceState({}, "", "cientistas.html");
       applyFilters();
     });
@@ -476,35 +550,81 @@
     "Comunicação, mídia e cultura digital": "Informação, sociedade e ambientes digitais."
   };
 
-  function renderThemeCard(theme, count) {
-    return `<button class="explore-card" type="button" data-theme="${escapeHTML(theme)}">
+  function renderResearcherIcon(researcher) {
+    return `<button class="researcher-icon" type="button" data-researcher-id="${escapeHTML(researcher.id)}" aria-label="Abrir perfil de ${escapeHTML(researcher.nome)}">
+      ${avatarMarkup(researcher, "researcher-icon__photo")}
+      <strong>${escapeHTML(researcher.nome)}</strong>
+      <span>${escapeHTML(displayOrFallback(researcher.sigla))}</span>
+    </button>`;
+  }
+
+  function renderThemeCard(theme, count, isActive = false) {
+    return `<button class="explore-card${isActive ? " is-active" : ""}" type="button" data-theme="${escapeHTML(theme)}" aria-pressed="${isActive ? "true" : "false"}">
       <span class="explore-card__icon" aria-hidden="true">✦</span>
       <h3>${escapeHTML(theme)}</h3>
       <p>${escapeHTML(themeDescriptions[theme] || "Uma rede de pesquisas e conexões científicas.")}</p>
-      <span class="explore-card__footer"><span>${count} ${count === 1 ? "pesquisadora" : "pesquisadoras"}</span><span>Explorar →</span></span>
+      <span class="explore-card__footer"><span>${count} ${count === 1 ? "pesquisadora" : "pesquisadoras"}</span><span>Ver perfis →</span></span>
     </button>`;
   }
 
   function renderTematicas() {
     const chipRow = document.querySelector("#area-chips");
     const grid = document.querySelector("#theme-grid");
+    const selection = document.querySelector("#theme-selection");
+    const selectionTitle = document.querySelector("#theme-selection-title");
+    const selectionCount = document.querySelector("#theme-result-count");
+    const selectionGrid = document.querySelector("#theme-researchers");
     const areas = ["Todas as áreas", ...uniqueAreas()];
     let activeArea = "Todas as áreas";
+    let activeTheme = params.get("tematica") || "";
+
+    const currentAreaResearchers = () => activeArea === "Todas as áreas"
+      ? researchers
+      : researchers.filter((item) => (item.areas?.length ? item.areas : [item.area]).includes(activeArea));
 
     chipRow.innerHTML = areas.map((area, index) => `<button class="chip${index === 0 ? " is-active" : ""}" type="button" data-area="${escapeHTML(area)}">${escapeHTML(area)}</button>`).join("");
-    const draw = () => {
-      const subset = activeArea === "Todas as áreas"
-        ? researchers
-        : researchers.filter((item) => (item.areas?.length ? item.areas : [item.area]).includes(activeArea));
+
+    const renderSelectedTheme = (shouldScroll = false) => {
+      if (!selection || !selectionGrid) return;
+      if (!activeTheme) {
+        selection.hidden = true;
+        selectionGrid.innerHTML = "";
+        return;
+      }
+
+      const selectedResearchers = currentAreaResearchers()
+        .filter((item) => item.tematica === activeTheme)
+        .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+      selection.hidden = false;
+      if (selectionTitle) selectionTitle.textContent = activeTheme;
+      if (selectionCount) {
+        selectionCount.textContent = `${selectedResearchers.length} ${selectedResearchers.length === 1 ? "pesquisadora" : "pesquisadoras"}`;
+      }
+      selectionGrid.innerHTML = selectedResearchers.length
+        ? selectedResearchers.map(renderResearcherIcon).join("")
+        : '<div class="empty-state"><h3>Nenhuma pesquisadora nesta seleção</h3></div>';
+      bindResearcherCards(selectionGrid);
+      if (shouldScroll) selection.scrollIntoView({ block: "start", behavior: reducedMotion ? "auto" : "smooth" });
+    };
+
+    const draw = (shouldScroll = false) => {
+      const subset = currentAreaResearchers();
       const totals = subset.reduce((map, item) => map.set(item.tematica, (map.get(item.tematica) || 0) + 1), new Map());
+      if (activeTheme && !totals.has(activeTheme)) activeTheme = "";
       grid.innerHTML = [...totals]
         .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"))
-        .map(([theme, total]) => renderThemeCard(theme, total))
+        .map(([theme, total]) => renderThemeCard(theme, total, theme === activeTheme))
         .join("") || '<div class="empty-state"><h3>Nenhuma temática nesta área</h3></div>';
       grid.querySelectorAll("[data-theme]").forEach((card) => {
-        card.addEventListener("click", () => navigate(`cientistas.html?tematica=${encodeURIComponent(card.dataset.theme)}`));
+        card.addEventListener("click", () => {
+          activeTheme = card.dataset.theme;
+          window.history.replaceState({}, "", `tematicas.html?tematica=${encodeURIComponent(activeTheme)}`);
+          draw(true);
+        });
       });
+      renderSelectedTheme(shouldScroll);
     };
+
     chipRow.addEventListener("click", (event) => {
       const chip = event.target.closest("[data-area]");
       if (!chip) return;
@@ -619,7 +739,8 @@
     const tag = options.tag || "p";
     const extraClass = options.className ? ` ${options.className}` : "";
     const displayValue = options.allowEmpty && !validText(value) ? "" : displayOrFallback(value);
-    const classes = `paulo-template__field paulo-template__${name}${textFitClass(value, options.mediumAt, options.longAt)}${extraClass}`;
+    const fitClass = options.fit === false ? "" : textFitClass(value, options.mediumAt, options.longAt);
+    const classes = `paulo-template__field paulo-template__${name}${fitClass}${extraClass}`;
     return `<${tag} class="${classes}" aria-label="${escapeHTML(label)}">${escapeHTML(displayValue)}</${tag}>`;
   }
 
@@ -627,23 +748,70 @@
     if (key === "publications") return researcher.artigos ?? researcher.trabalhos;
     if (key === "citations") return researcher.citacoes;
     if (key === "hindex") return researcher.indiceH;
+    if (key === "books") return researcher.livros;
+    if (key === "patents") return researcher.patentes;
+    if (key === "programs") return researcher.softwares;
     return null;
   }
 
-  function showcaseMetricValue(researcher, key) {
-    const value = metricNumber(researcher, key);
-    const threshold = SHOWCASE_METRIC_THRESHOLDS[key] ?? 0;
-    return Number.isFinite(value) && value >= threshold ? formatNumber(value) : "";
+  function buildMetricCandidate(researcher, metric) {
+    const value = metricNumber(researcher, metric.key);
+    if (!Number.isFinite(value) || value < metric.threshold) return null;
+    return { ...metric, value: formatNumber(value) };
   }
 
-  function pauloMetricField(name, value, label) {
-    return pauloTextField(name, value, label, {
+  function buildShowcaseMetrics(researcher) {
+    const fallback = FALLBACK_METRICS.map((metric) => buildMetricCandidate(researcher, metric)).filter(Boolean);
+    return PRIMARY_METRICS.map((metric) => buildMetricCandidate(researcher, metric) || fallback.shift() || null);
+  }
+
+  function pauloMetricCaption(slot, metric) {
+    return `<div class="paulo-template__metric-caption paulo-template__metric-caption--${slot}${metric ? "" : " is-empty"}" aria-hidden="true">
+      ${metric ? `${iconSVG(metric.icon)}<span>${escapeHTML(metric.label)}</span>` : ""}
+    </div>`;
+  }
+
+  function pauloMetricField(slot, metric) {
+    return pauloTextField(slot, metric?.value || "", metric?.label || "Indicador", {
       tag: "strong",
       mediumAt: 6,
       longAt: 10,
-      className: value ? "" : "is-empty",
+      className: metric ? "" : "is-empty",
       allowEmpty: true
     });
+  }
+
+  function readLoveCounts() {
+    try {
+      return JSON.parse(localStorage.getItem(LOVE_STORAGE_KEY) || "{}");
+    } catch {
+      return {};
+    }
+  }
+
+  function loveCountFor(id) {
+    const counts = readLoveCounts();
+    return Number(counts[id] || 0);
+  }
+
+  function addLoveFor(id) {
+    const counts = readLoveCounts();
+    counts[id] = Number(counts[id] || 0) + 1;
+    try {
+      localStorage.setItem(LOVE_STORAGE_KEY, JSON.stringify(counts));
+    } catch {
+      // A interação visual continua funcionando mesmo se o navegador bloquear armazenamento.
+    }
+    return counts[id];
+  }
+
+  function loveButtonMarkup(researcher) {
+    const count = loveCountFor(researcher.id);
+    return `<button class="paulo-template__love-button" type="button" data-love aria-label="Dar Amei para ${escapeHTML(researcher.nome)}">
+      ${iconSVG("heart")}
+      <span>Amei</span>
+      <strong data-love-count>${count ? escapeHTML(formatNumber(count)) : ""}</strong>
+    </button>`;
   }
 
   function renderProfile(targetResearcher = null, updateHistory = false) {
@@ -669,14 +837,14 @@
       window.history.replaceState({}, "", `perfil.html?id=${encodeURIComponent(selected.id)}`);
     }
 
-    const bio = buildProfileSummary(selected);
+    const abstract = selected.abstractAI || selected.resumo;
     const highlight = buildHighlightPhrase(selected);
     const photo = lattesPhotoURL(selected);
     const institution = `${selected.instituicao}${selected.sigla && selected.sigla !== selected.instituicao ? ` • ${selected.sigla}` : ""}`;
     const profileMeta = [selected.sigla, selected.cidade].filter(Boolean).join(" • ");
-    const publications = showcaseMetricValue(selected, "publications");
-    const citations = showcaseMetricValue(selected, "citations");
-    const hindex = showcaseMetricValue(selected, "hindex");
+    const metricSlots = ["publications", "citations", "hindex"];
+    const metrics = buildShowcaseMetrics(selected);
+    const visibleMetrics = metrics.filter(Boolean);
     const themeAction = selected.tematica && selected.tematica !== "Temática não informada"
       ? `<button class="touch-button" type="button" data-link-theme>${iconSVG("flask")} <span>Mesma temática</span></button>`
       : "";
@@ -688,29 +856,29 @@
       <section class="paulo-template" aria-label="Infográfico Descubra uma cientista">
         <img class="paulo-template__base" src="${PAULO_TEMPLATE_IMAGE}" alt="" aria-hidden="true" decoding="async" />
         <div class="paulo-template__photo" data-photo>${photoMarkup}</div>
-        <div class="paulo-template__name${textFitClass(selected.nome, 22, 42)}" id="profile-title" tabindex="-1">
+        <div class="paulo-template__name${textFitClass(selected.nome, 22, 32)}" id="profile-title" tabindex="-1">
           <strong>${escapeHTML(selected.nome)}</strong>
           ${profileMeta ? `<span>${escapeHTML(profileMeta)}</span>` : ""}
         </div>
+        ${loveButtonMarkup(selected)}
         ${pauloTextField("area", selected.area, "Área de atuação", { mediumAt: 22, longAt: 40 })}
         ${pauloTextField("degree", selected.graduacao, "Grau de formação", { mediumAt: 20, longAt: 34 })}
-        ${pauloTextField("bio", bio, "Sobre a pesquisadora", { mediumAt: 160, longAt: 250 })}
+        ${pauloTextField("bio", abstract, "Resumo da pesquisadora", { tag: "div", fit: false })}
         ${pauloTextField("institution", institution, "Instituição", { mediumAt: 42, longAt: 78 })}
         ${pauloTextField("city", selected.cidade, "Cidade de atuação", { mediumAt: 24, longAt: 42 })}
-        ${pauloMetricField("publications", publications, "Publicações destacadas")}
-        ${pauloMetricField("citations", citations, "Citações destacadas")}
-        ${pauloMetricField("hindex", hindex, "Índice h destacado")}
+        ${metricSlots.map((slot, index) => pauloMetricCaption(slot, metrics[index])).join("")}
+        ${metricSlots.map((slot, index) => pauloMetricField(slot, metrics[index])).join("")}
         ${pauloTextField("post", highlight, "Destaques", { mediumAt: 82, longAt: 112 })}
         <dl class="sr-only">
           <dt>Nome</dt><dd>${escapeHTML(selected.nome)}</dd>
           <dt>Área de atuação</dt><dd>${escapeHTML(displayOrFallback(selected.area))}</dd>
           <dt>Grau de formação</dt><dd>${escapeHTML(displayOrFallback(selected.graduacao))}</dd>
-          <dt>Sobre a pesquisadora</dt><dd>${escapeHTML(bio)}</dd>
+          <dt>Resumo da pesquisadora</dt><dd>${escapeHTML(abstract)}</dd>
           <dt>Instituição</dt><dd>${escapeHTML(displayOrFallback(institution))}</dd>
           <dt>Cidade de atuação</dt><dd>${escapeHTML(displayOrFallback(selected.cidade))}</dd>
-          <dt>Publicações destacadas</dt><dd>${escapeHTML(publications || "Não exibido no totem")}</dd>
-          <dt>Citações destacadas</dt><dd>${escapeHTML(citations || "Não exibido no totem")}</dd>
-          <dt>Índice h destacado</dt><dd>${escapeHTML(hindex || "Não exibido no totem")}</dd>
+          ${visibleMetrics.length
+            ? visibleMetrics.map((metric) => `<dt>${escapeHTML(metric.label)}</dt><dd>${escapeHTML(metric.value)}</dd>`).join("")
+            : "<dt>Indicadores</dt><dd>Não exibido no totem</dd>"}
         </dl>
       </section>
 
@@ -723,7 +891,15 @@
     </article>`;
 
     root.querySelector("[data-discover]").addEventListener("click", () => discoverResearcher(currentProfileId));
-    root.querySelector("[data-link-theme]")?.addEventListener("click", () => navigate(`cientistas.html?tematica=${encodeURIComponent(selected.tematica)}`));
+    root.querySelector("[data-link-theme]")?.addEventListener("click", () => navigate(`tematicas.html?tematica=${encodeURIComponent(selected.tematica)}`));
+    root.querySelector("[data-love]")?.addEventListener("click", (event) => {
+      const button = event.currentTarget;
+      const total = addLoveFor(selected.id);
+      button.classList.add("is-loved", "is-pulsing");
+      button.querySelector("[data-love-count]").textContent = formatNumber(total);
+      if (status) status.textContent = `${selected.nome} recebeu um Amei.`;
+      window.setTimeout(() => button.classList.remove("is-pulsing"), 420);
+    });
     root.querySelectorAll(".paulo-template__photo img").forEach((image) => {
       image.addEventListener("error", () => {
         const photo = image.closest("[data-photo]");

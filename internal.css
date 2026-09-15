@@ -306,14 +306,22 @@ body[data-page="perfil"] .internal-shell {
 .paulo-template__field {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  font-size: clamp(.58rem, 1.92cqw, 1.14rem);
+  font-size: clamp(.62rem, 2.08cqw, 1.24rem);
   font-weight: 800;
-  line-height: 1.16;
+  line-height: 1.18;
   text-wrap: balance;
 }
 
-.paulo-template__field.is-medium { font-size: clamp(.53rem, 1.72cqw, 1rem); }
-.paulo-template__field.is-long { font-size: clamp(.49rem, 1.5cqw, .9rem); }
+.paulo-template__field.is-medium {
+  font-size: clamp(.54rem, 1.76cqw, 1.05rem);
+  line-height: 1.16;
+}
+
+.paulo-template__field.is-long {
+  font-size: clamp(.48rem, 1.48cqw, .88rem);
+  line-height: 1.14;
+}
+
 .paulo-template__field.is-empty { visibility: hidden; }
 
 .paulo-template__area {
@@ -340,35 +348,43 @@ body[data-page="perfil"] .internal-shell {
 
 .paulo-template__bio {
   left: 55.2%;
-  top: 32.95%;
+  top: 32.7%;
   width: 37.6%;
-  height: 8.45%;
+  height: 8.9%;
   color: #26215f;
-  font-size: clamp(.58rem, 1.72cqw, 1.02rem);
+  font-size: clamp(.84rem, 2.45cqw, 1.42rem);
   font-weight: 720;
-  line-height: 1.16;
+  line-height: 1.18;
   -webkit-line-clamp: 5;
 }
 
-.paulo-template__bio.is-medium,
+.paulo-template__bio.is-medium {
+  font-size: clamp(.58rem, 1.68cqw, .98rem);
+  line-height: 1.18;
+  -webkit-line-clamp: 6;
+}
+
 .paulo-template__bio.is-long {
-  font-size: clamp(.54rem, 1.56cqw, .92rem);
+  font-size: clamp(.5rem, 1.46cqw, .86rem);
+  line-height: 1.15;
   -webkit-line-clamp: 6;
 }
 
 .paulo-template__institution {
   left: 55.7%;
-  top: 46.35%;
+  top: 46.05%;
   width: 36.5%;
-  height: 3.7%;
+  height: 4.35%;
+  line-height: 1.14;
   -webkit-line-clamp: 2;
 }
 
 .paulo-template__city {
   left: 55.7%;
-  top: 53.95%;
+  top: 53.85%;
   width: 36.5%;
-  height: 2.35%;
+  height: 2.65%;
+  line-height: 1.12;
   -webkit-line-clamp: 1;
 }
 

@@ -548,9 +548,7 @@
 
   function chooseRandomResearcher(excludedId = null) {
     const lastId = excludedId || sessionStorage.getItem(LAST_DISCOVERY_KEY);
-    const options = researchers
-      .filter((item) => String(item.id) !== String(lastId))
-      .filter(hasShowcaseMetrics);
+    const options = researchers.filter((item) => String(item.id) !== String(lastId));
     const pool = options.length ? options : researchers;
     const selected = pool[Math.floor(Math.random() * pool.length)];
     if (selected) sessionStorage.setItem(LAST_DISCOVERY_KEY, selected.id);
@@ -579,12 +577,12 @@
       : compactText(researcher.instituicao, 34);
     const place = firstText(institution, researcher.cidade, "Bahia");
 
-    if (researcher.tema) {
-      return `Pesquisa ${compactText(researcher.tema, 64)} em ${place}.`;
+    if (researcher.tematica && researcher.tematica !== "Temática não informada") {
+      return `Pesquisa em ${compactText(researcher.tematica, 58)} com atuação em ${place}.`;
     }
 
-    if (researcher.tematica && researcher.tematica !== "Temática não informada") {
-      return `Atua em ${compactText(researcher.tematica, 58)}, fortalecendo a ciência na Bahia.`;
+    if (researcher.tema) {
+      return `Pesquisa ${compactText(researcher.tema, 58)} em ${place}.`;
     }
 
     return `Atua em ${compactText(researcher.area, 42)} em ${place}.`;
@@ -595,8 +593,8 @@
       ? researcher.sigla
       : compactText(researcher.instituicao, 44);
     const location = researcher.cidade && researcher.cidade !== "Cidade não informada" ? `, em ${researcher.cidade}` : "";
-    const focus = researcher.tema
-      || (researcher.tematica !== "Temática não informada" ? researcher.tematica : null)
+    const focus = (researcher.tematica !== "Temática não informada" ? researcher.tematica : null)
+      || researcher.tema
       || researcher.area;
 
     return `Pesquisadora vinculada à ${institution}${location}, com atuação em ${compactText(focus, 64)}.`;
@@ -636,16 +634,6 @@
     const value = metricNumber(researcher, key);
     const threshold = SHOWCASE_METRIC_THRESHOLDS[key] ?? 0;
     return Number.isFinite(value) && value >= threshold ? formatNumber(value) : "";
-  }
-
-  function visibleShowcaseMetricCount(researcher) {
-    return Object.keys(SHOWCASE_METRIC_THRESHOLDS)
-      .filter((key) => showcaseMetricValue(researcher, key))
-      .length;
-  }
-
-  function hasShowcaseMetrics(researcher) {
-    return visibleShowcaseMetricCount(researcher) >= 2;
   }
 
   function pauloMetricField(name, value, label) {

@@ -3,7 +3,7 @@
 
   const CSV_URL = "data/pesquisadoras.csv";
   const JSON_URL = "data/dados_simcc_completo.json";
-  const PAULO_TEMPLATE_IMAGE = "assets/descubra-cientista-paulo-mobile.png";
+  const PAULO_TEMPLATE_IMAGE = "assets/descubra-cientista-paulo-mobile-v2.png";
   const INACTIVITY_DELAY = 60_000;
   const LAST_DISCOVERY_KEY = "cienciaDelasLastResearcherId";
 
@@ -558,19 +558,41 @@
     return `${sliced.slice(0, cutAt > 180 ? cutAt + 1 : maxLength).trim()}...`;
   }
 
-  function buildImpactPhrase(researcher) {
-    if (researcher.tema) {
-      return `${researcher.nome} atua em ${researcher.tema}, conectando conhecimento científico a ${researcher.area}.`;
-    }
-    if (researcher.tematica && researcher.tematica !== "Temática não informada") {
-      return `${researcher.nome} fortalece pesquisas em ${researcher.tematica}.`;
-    }
-    return shortText(researcher.resumo, 180);
+  function compactText(value, maxLength = 90) {
+    const text = displayOrFallback(value).replace(/\s+/g, " ");
+    if (text.length <= maxLength) return text;
+    const sliced = text.slice(0, maxLength + 1);
+    const cutAt = sliced.lastIndexOf(" ");
+    return `${sliced.slice(0, cutAt > 24 ? cutAt : maxLength).trim()}...`;
   }
 
-  function lattesURL(researcher) {
-    if (!researcher.lattesId) return null;
-    return `https://lattes.cnpq.br/${encodeURIComponent(researcher.lattesId)}`;
+  function buildHighlightPhrase(researcher) {
+    const institution = researcher.sigla && researcher.sigla !== "Instituição"
+      ? researcher.sigla
+      : compactText(researcher.instituicao, 34);
+    const place = firstText(institution, researcher.cidade, "Bahia");
+
+    if (researcher.tema) {
+      return `Pesquisa ${compactText(researcher.tema, 64)} em ${place}.`;
+    }
+
+    if (researcher.tematica && researcher.tematica !== "Temática não informada") {
+      return `Atua em ${compactText(researcher.tematica, 58)}, fortalecendo a ciência na Bahia.`;
+    }
+
+    return `Atua em ${compactText(researcher.area, 42)} em ${place}.`;
+  }
+
+  function buildProfileSummary(researcher) {
+    const institution = researcher.sigla && researcher.sigla !== "Instituição"
+      ? researcher.sigla
+      : compactText(researcher.instituicao, 44);
+    const location = researcher.cidade && researcher.cidade !== "Cidade não informada" ? `, em ${researcher.cidade}` : "";
+    const focus = researcher.tema
+      || (researcher.tematica !== "Temática não informada" ? researcher.tematica : null)
+      || researcher.area;
+
+    return `Pesquisadora vinculada à ${institution}${location}, com atuação em ${compactText(focus, 64)}.`;
   }
 
   function lattesPhotoURL(researcher) {
@@ -615,9 +637,8 @@
       window.history.replaceState({}, "", `perfil.html?id=${encodeURIComponent(selected.id)}`);
     }
 
-    const bio = shortText(firstText(selected.resumo, selected.abstractAI), 210);
-    const impact = shortText(buildImpactPhrase(selected), 120);
-    const lattes = lattesURL(selected);
+    const bio = buildProfileSummary(selected);
+    const highlight = buildHighlightPhrase(selected);
     const photo = lattesPhotoURL(selected);
     const institution = `${selected.instituicao}${selected.sigla && selected.sigla !== selected.instituicao ? ` • ${selected.sigla}` : ""}`;
     const profileMeta = [selected.sigla, selected.cidade].filter(Boolean).join(" • ");
@@ -627,7 +648,7 @@
       : "";
     const photoMarkup = photo
       ? `<img src="${escapeHTML(photo)}" alt="Foto de ${escapeHTML(selected.nome)}" loading="eager" decoding="async" />`
-      : `<span class="sr-only">Foto não disponível no Lattes.</span>`;
+      : `<span class="sr-only">Foto não disponível.</span>`;
 
     root.innerHTML = `<article class="paulo-profile" aria-labelledby="profile-title">
       <section class="paulo-template" aria-label="Infográfico Descubra uma cientista">
@@ -645,7 +666,7 @@
         ${pauloTextField("publications", publications === null || publications === undefined ? "0" : formatNumber(publications), "Publicações", { tag: "strong", mediumAt: 6, longAt: 10 })}
         ${pauloTextField("citations", selected.citacoes === null || selected.citacoes === undefined ? "0" : formatNumber(selected.citacoes), "Citações", { tag: "strong", mediumAt: 6, longAt: 10 })}
         ${pauloTextField("hindex", selected.indiceH === null || selected.indiceH === undefined ? "0" : formatNumber(selected.indiceH), "Índice h", { tag: "strong", mediumAt: 4, longAt: 7 })}
-        ${pauloTextField("post", impact, "Post fixado", { mediumAt: 92, longAt: 135 })}
+        ${pauloTextField("post", highlight, "Destaques", { mediumAt: 82, longAt: 112 })}
         <dl class="sr-only">
           <dt>Nome</dt><dd>${escapeHTML(selected.nome)}</dd>
           <dt>Área de atuação</dt><dd>${escapeHTML(displayOrFallback(selected.area))}</dd>
@@ -664,7 +685,6 @@
           ${iconSVG("spark")} <span>Conheça outra pesquisadora</span>
         </button>
         ${themeAction}
-        ${lattes ? `<a class="touch-button" href="${escapeHTML(lattes)}" target="_blank" rel="noopener">${iconSVG("bookmark")} <span>Currículo Lattes</span></a>` : ""}
       </div>
     </article>`;
 
@@ -674,7 +694,7 @@
       image.addEventListener("error", () => {
         const photo = image.closest("[data-photo]");
         photo.classList.add("is-empty");
-        photo.innerHTML = '<span class="sr-only">Foto não disponível no Lattes.</span>';
+        photo.innerHTML = '<span class="sr-only">Foto não disponível.</span>';
       }, { once: true });
     });
 

@@ -833,13 +833,13 @@
 
   function loveCountFor(id) {
     const counts = readLoveCounts();
-    return Number(counts[id] || 0);
+    return Number(counts[id] || 0) > 0 ? 1 : 0;
   }
 
   function addLoveFor(id) {
     const counts = readLoveCounts();
     if (Number(counts[id] || 0) > 0) return null;
-    counts[id] = Number(counts[id] || 0) + 1;
+    counts[id] = 1;
     try {
       localStorage.setItem(LOVE_STORAGE_KEY, JSON.stringify(counts));
     } catch {

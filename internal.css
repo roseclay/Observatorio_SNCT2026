@@ -671,11 +671,11 @@ body[data-page="perfil"] .internal-shell {
   z-index: 5;
   top: 58.7%;
   height: 13.35%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 1cqw;
-  padding: 1.65cqw 1.35cqw 1.75cqw;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  align-items: stretch;
+  gap: .45cqw;
+  padding: 1.35cqw 1.35cqw 1.25cqw;
   background: linear-gradient(145deg, #ffffff, #f4f8ff);
   border: 1px solid rgba(255,255,255,.92);
   border-radius: 1.35cqw;
@@ -685,17 +685,17 @@ body[data-page="perfil"] .internal-shell {
 .paulo-template__metric-head {
   min-width: 0;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: .75cqw;
   color: #10115f;
-  font-size: clamp(.5rem, 1.2cqw, .72rem);
+  font-size: clamp(.64rem, 1.52cqw, .92rem);
   font-weight: 900;
-  line-height: 1.12;
+  line-height: 1.08;
 }
 
 .paulo-template__metric-head svg {
-  width: clamp(.9rem, 2.65cqw, 1.58rem);
-  height: clamp(.9rem, 2.65cqw, 1.58rem);
+  width: clamp(1.08rem, 3cqw, 1.78rem);
+  height: clamp(1.08rem, 3cqw, 1.78rem);
   flex: 0 0 auto;
   fill: none;
   stroke: currentColor;
@@ -714,11 +714,14 @@ body[data-page="perfil"] .internal-shell {
 
 .paulo-template__metric-card strong {
   display: block;
+  align-self: center;
+  justify-self: center;
   color: #10115f;
-  font-size: clamp(1.35rem, 4.7cqw, 2.8rem);
+  font-size: clamp(1.8rem, 5.6cqw, 3.25rem);
   font-weight: 950;
-  line-height: .9;
+  line-height: 1;
   text-align: center;
+  transform: translateY(-.35cqw);
 }
 
 .paulo-template__metric-card--count1-0 {

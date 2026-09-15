@@ -22,6 +22,18 @@
     { key: "patents", label: "Patentes", icon: "patent", threshold: 1 },
     { key: "programs", label: "Programas de computador", icon: "code", threshold: 1 }
   ];
+  const INSTITUTION_LOGOS = {
+    EBMSP: "assets/instituicoes/ebmsp.png",
+    "FIOCRUZ-BA": "assets/instituicoes/fiocruz-ba.png",
+    UNEB: "assets/instituicoes/uneb.png",
+    UEFS: "assets/instituicoes/uefs.png",
+    UESC: "assets/instituicoes/uesc.png",
+    UESB: "assets/instituicoes/uesb.png",
+    UFBA: "assets/instituicoes/ufba.png",
+    UFOB: "assets/instituicoes/ufob.png",
+    UFRB: "assets/instituicoes/ufrb.png",
+    UFSB: "assets/instituicoes/ufsb.png"
+  };
 
   const page = document.body.dataset.page;
   const params = new URLSearchParams(window.location.search);
@@ -470,6 +482,20 @@
     return initials(sigla || group.label);
   }
 
+  function institutionLogoMarkup(group) {
+    const sigla = displayOrFallback(group.sigla).toUpperCase();
+    const logo = INSTITUTION_LOGOS[sigla];
+    const mark = escapeHTML(institutionMark(group));
+    if (!logo) {
+      return `<span class="institution-tile__mark" aria-hidden="true"><span>${mark}</span></span>`;
+    }
+
+    return `<span class="institution-tile__mark has-logo" aria-hidden="true">
+      <img src="${escapeHTML(logo)}" alt="" loading="lazy" decoding="async" />
+      <span>${mark}</span>
+    </span>`;
+  }
+
   function renderCientistas() {
     const grid = document.querySelector("#researcher-grid");
     const count = document.querySelector("#result-count");
@@ -491,10 +517,16 @@
         <span>${researchers.length} pesquisadoras</span>
       </button>`;
       institutionGrid.innerHTML = allButton + groups.map((group) => `<button class="institution-tile${group.label === selectedInstitution ? " is-active" : ""}" type="button" data-institution="${escapeHTML(group.label)}">
-        <span class="institution-tile__mark" aria-hidden="true">${escapeHTML(institutionMark(group))}</span>
+        ${institutionLogoMarkup(group)}
         <strong>${escapeHTML(displayOrFallback(group.sigla))}</strong>
         <span>${escapeHTML(group.label)}</span>
       </button>`).join("");
+      institutionGrid.querySelectorAll(".institution-tile__mark img").forEach((image) => {
+        image.addEventListener("error", () => {
+          image.remove();
+          image.closest(".has-logo")?.classList.remove("has-logo");
+        }, { once: true });
+      });
       institutionGrid.querySelectorAll("[data-institution]").forEach((button) => {
         button.addEventListener("click", () => {
           selectedInstitution = button.dataset.institution;
@@ -738,7 +770,9 @@
   function pauloTextField(name, value, label, options = {}) {
     const tag = options.tag || "p";
     const extraClass = options.className ? ` ${options.className}` : "";
-    const displayValue = options.allowEmpty && !validText(value) ? "" : displayOrFallback(value);
+    const displayValue = options.allowEmpty && !validText(value)
+      ? ""
+      : displayOrFallback(value).replace(/\\n/g, "\n");
     const fitClass = options.fit === false ? "" : textFitClass(value, options.mediumAt, options.longAt);
     const classes = `paulo-template__field paulo-template__${name}${fitClass}${extraClass}`;
     return `<${tag} class="${classes}" aria-label="${escapeHTML(label)}">${escapeHTML(displayValue)}</${tag}>`;
@@ -849,8 +883,8 @@
       ? `<button class="touch-button" type="button" data-link-theme>${iconSVG("flask")} <span>Mesma temática</span></button>`
       : "";
     const photoMarkup = photo
-      ? `<img src="${escapeHTML(photo)}" alt="Foto de ${escapeHTML(selected.nome)}" loading="eager" decoding="async" />`
-      : `<span class="sr-only">Foto não disponível.</span>`;
+      ? `<span class="paulo-template__photo-fallback" aria-hidden="true">${escapeHTML(initials(selected.nome))}</span><img src="${escapeHTML(photo)}" alt="Foto de ${escapeHTML(selected.nome)}" loading="eager" decoding="async" />`
+      : `<span class="paulo-template__photo-fallback" aria-hidden="true">${escapeHTML(initials(selected.nome))}</span><span class="sr-only">Foto não disponível.</span>`;
 
     root.innerHTML = `<article class="paulo-profile" aria-labelledby="profile-title">
       <section class="paulo-template" aria-label="Infográfico Descubra uma cientista">
@@ -904,7 +938,7 @@
       image.addEventListener("error", () => {
         const photo = image.closest("[data-photo]");
         photo.classList.add("is-empty");
-        photo.innerHTML = '<span class="sr-only">Foto não disponível.</span>';
+        image.remove();
       }, { once: true });
     });
 

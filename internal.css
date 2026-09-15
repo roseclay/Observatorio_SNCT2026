@@ -400,7 +400,10 @@ body[data-page="perfil"] .internal-shell {
 }
 
 .paulo-template__field,
-.paulo-template__name {
+.paulo-template__name,
+.paulo-template__info-card,
+.paulo-template__metric-card,
+.paulo-template__metrics-mask {
   position: absolute;
   z-index: 3;
   margin: 0;
@@ -526,24 +529,79 @@ body[data-page="perfil"] .internal-shell {
 
 .paulo-template__field.is-empty { visibility: hidden; }
 
+.paulo-template__info-card {
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 1.45cqw;
+  background: linear-gradient(145deg, #ffffff, #f4f8ff);
+  border: 1px solid rgba(255,255,255,.92);
+  border-radius: 1.35cqw;
+  box-shadow: 0 .55cqw 1.25cqw rgba(20,22,95,.08), inset 0 0 0 1px rgba(116,86,223,.05);
+}
+
+.paulo-template__info-icon {
+  width: clamp(1.55rem, 5.1cqw, 3.05rem);
+  height: clamp(1.55rem, 5.1cqw, 3.05rem);
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  color: #1015a8;
+}
+
+.paulo-template__info-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.paulo-template__info-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .45cqw;
+}
+
+.paulo-template__info-label {
+  color: #2721a4;
+  font-size: clamp(.48rem, 1.28cqw, .76rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.paulo-template__info-copy strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  color: var(--blue-deep);
+  font-size: clamp(.66rem, 2.02cqw, 1.2rem);
+  font-weight: 900;
+  line-height: 1.08;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+  -webkit-line-clamp: 2;
+}
+
+.paulo-template__info-card.is-medium .paulo-template__info-copy strong {
+  font-size: clamp(.58rem, 1.68cqw, 1rem);
+}
+
+.paulo-template__info-card.is-long .paulo-template__info-copy strong {
+  font-size: clamp(.5rem, 1.36cqw, .82rem);
+  line-height: 1.12;
+}
+
 .paulo-template__area {
   z-index: 6;
   left: 45.65%;
   top: 21.58%;
   width: 24.25%;
   height: 7.2%;
-  padding: 2.25cqw 1.4cqw .95cqw 6.4cqw;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: linear-gradient(145deg, #ffffff, #f4f8ff);
-  border: 1px solid rgba(255,255,255,.92);
-  border-radius: 1.35cqw;
-  box-shadow: 0 .45cqw 1.05cqw rgba(20,22,95,.08), inset 0 0 0 1px rgba(116,86,223,.05);
-  line-height: 1.08;
-  overflow-wrap: break-word;
-  text-wrap: balance;
-  hyphens: none;
+  padding: 1.25cqw 1.2cqw 1.15cqw 1.45cqw;
 }
 
 .paulo-template__degree {
@@ -552,16 +610,7 @@ body[data-page="perfil"] .internal-shell {
   top: 21.58%;
   width: 25.25%;
   height: 7.2%;
-  padding: 2.25cqw 1.2cqw .95cqw 6.5cqw;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: linear-gradient(145deg, #ffffff, #f4f8ff);
-  border: 1px solid rgba(255,255,255,.92);
-  border-radius: 1.35cqw;
-  box-shadow: 0 .45cqw 1.05cqw rgba(20,22,95,.08), inset 0 0 0 1px rgba(116,86,223,.05);
-  line-height: 1.08;
-  overflow-wrap: break-word;
+  padding: 1.25cqw 1.15cqw 1.15cqw 1.45cqw;
 }
 
 .paulo-template__bio {
@@ -603,29 +652,46 @@ body[data-page="perfil"] .internal-shell {
 .paulo-template__bio::-webkit-scrollbar-track { background: rgba(16,17,95,.06); border-radius: 999px; }
 .paulo-template__bio::-webkit-scrollbar-thumb { background: rgba(116,86,223,.46); border-radius: 999px; }
 
-.paulo-template__metric-caption {
+.paulo-template__metrics-mask {
+  z-index: 3;
+  left: 3.65%;
+  top: 57.55%;
+  width: 90.15%;
+  height: 19.2%;
+  background: #eef4ff;
+  border-radius: 1.5cqw;
+}
+
+.paulo-template__metric-card {
   position: absolute;
-  z-index: 4;
+  z-index: 5;
   top: 57.95%;
   height: 18.2%;
-  padding: 2.05cqw 1.55cqw 7.6cqw;
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: 1cqw;
-  color: #10115f;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.4cqw;
+  padding: 2.1cqw 1.55cqw 2.35cqw;
   background: linear-gradient(145deg, #ffffff, #f4f8ff);
   border: 1px solid rgba(255,255,255,.92);
   border-radius: 1.35cqw;
   box-shadow: 0 .55cqw 1.35cqw rgba(20,22,95,.08), inset 0 0 0 1px rgba(116,86,223,.05);
-  font-size: clamp(.5rem, 1.34cqw, .8rem);
+}
+
+.paulo-template__metric-head {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: .95cqw;
+  color: #10115f;
+  font-size: clamp(.52rem, 1.34cqw, .8rem);
   font-weight: 900;
   line-height: 1.12;
 }
 
-.paulo-template__metric-caption svg {
-  width: clamp(1rem, 3.2cqw, 1.9rem);
-  height: clamp(1rem, 3.2cqw, 1.9rem);
+.paulo-template__metric-head svg {
+  width: clamp(.95rem, 3.1cqw, 1.85rem);
+  height: clamp(.95rem, 3.1cqw, 1.85rem);
   flex: 0 0 auto;
   fill: none;
   stroke: currentColor;
@@ -634,7 +700,7 @@ body[data-page="perfil"] .internal-shell {
   stroke-linejoin: round;
 }
 
-.paulo-template__metric-caption span {
+.paulo-template__metric-head span {
   display: block;
   min-width: 0;
   max-width: 100%;
@@ -642,17 +708,41 @@ body[data-page="perfil"] .internal-shell {
   text-wrap: balance;
 }
 
-.paulo-template__metric-caption--publications {
-  left: 3.85%;
-  width: 27.05%;
+.paulo-template__metric-card strong {
+  display: block;
+  color: #10115f;
+  font-size: clamp(1.55rem, 5.4cqw, 3.2rem);
+  font-weight: 950;
+  line-height: .9;
+  text-align: center;
 }
 
-.paulo-template__metric-caption--citations {
+.paulo-template__metric-card--count1-0 {
   left: 34.9%;
   width: 27.05%;
 }
 
-.paulo-template__metric-caption--hindex {
+.paulo-template__metric-card--count2-0 {
+  left: 19.35%;
+  width: 27.05%;
+}
+
+.paulo-template__metric-card--count2-1 {
+  left: 50.65%;
+  width: 27.05%;
+}
+
+.paulo-template__metric-card--count3-0 {
+  left: 3.85%;
+  width: 27.05%;
+}
+
+.paulo-template__metric-card--count3-1 {
+  left: 34.9%;
+  width: 27.05%;
+}
+
+.paulo-template__metric-card--count3-2 {
   left: 66.05%;
   width: 27.05%;
 }
@@ -663,15 +753,7 @@ body[data-page="perfil"] .internal-shell {
   top: 43.95%;
   width: 49.95%;
   height: 6.45%;
-  padding: 2.1cqw 2.15cqw .8cqw 7.85cqw;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: linear-gradient(145deg, #ffffff, #f4f8ff);
-  border: 1px solid rgba(255,255,255,.92);
-  border-radius: 1.35cqw;
-  box-shadow: 0 .55cqw 1.25cqw rgba(20,22,95,.08), inset 0 0 0 1px rgba(116,86,223,.05);
-  line-height: 1.14;
+  padding: 1.1cqw 2.15cqw 1.1cqw 1.55cqw;
 }
 
 .paulo-template__city {
@@ -680,70 +762,7 @@ body[data-page="perfil"] .internal-shell {
   top: 50.72%;
   width: 49.95%;
   height: 6.45%;
-  padding: 2.05cqw 2.15cqw .8cqw 7.85cqw;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: linear-gradient(145deg, #ffffff, #f4f8ff);
-  border: 1px solid rgba(255,255,255,.92);
-  border-radius: 1.35cqw;
-  box-shadow: 0 .55cqw 1.25cqw rgba(20,22,95,.08), inset 0 0 0 1px rgba(116,86,223,.05);
-  line-height: 1.12;
-}
-
-.paulo-template__area::before,
-.paulo-template__degree::before,
-.paulo-template__institution::before,
-.paulo-template__city::before {
-  content: attr(aria-label);
-  display: block;
-  margin-bottom: .45cqw;
-  color: #2721a4;
-  font-size: clamp(.48rem, 1.28cqw, .76rem);
-  font-weight: 900;
-  line-height: 1;
-}
-
-.paulo-template__publications,
-.paulo-template__citations,
-.paulo-template__hindex {
-  z-index: 5;
-  top: 68.25%;
-  height: 4.9%;
-  display: grid;
-  place-items: center;
-  color: #10115f;
-  font-size: clamp(1.55rem, 5.4cqw, 3.2rem);
-  font-weight: 950;
-  line-height: .9;
-  text-align: center;
-}
-
-.paulo-template__publications.is-medium,
-.paulo-template__citations.is-medium,
-.paulo-template__hindex.is-medium {
-  font-size: clamp(.95rem, 3.35cqw, 2rem);
-}
-
-.paulo-template__publications.is-long,
-.paulo-template__citations.is-long,
-.paulo-template__hindex.is-long {
-  font-size: clamp(.78rem, 2.65cqw, 1.58rem);
-}
-
-.paulo-template__publications {
-  left: 6.6%;
-  width: 21.4%;
-}
-
-.paulo-template__citations {
-  left: 37.65%;
-  width: 21.4%;
-}
-
-.paulo-template__hindex {
-  left: 68.85%;
-  width: 21.4%;
+  padding: 1.1cqw 2.15cqw 1.1cqw 1.55cqw;
 }
 
 .paulo-template__post {

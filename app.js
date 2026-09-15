@@ -78,6 +78,10 @@
   const numberFormatter = new Intl.NumberFormat("pt-BR");
   const formatNumber = (value) => Number.isFinite(Number(value)) ? numberFormatter.format(Number(value)) : "0";
   const displayOrFallback = (value) => validText(value) || "Não informado";
+  const displayPublicText = (value) => displayOrFallback(value)
+    .replace(/\\n/g, "\n")
+    .replace(/\bsoftwares\b/gi, "programas de computador")
+    .replace(/\bsoftware\b/gi, "programa de computador");
 
   function normalizeKey(value) {
     return String(value || "")
@@ -772,10 +776,22 @@
     const extraClass = options.className ? ` ${options.className}` : "";
     const displayValue = options.allowEmpty && !validText(value)
       ? ""
-      : displayOrFallback(value).replace(/\\n/g, "\n");
+      : displayPublicText(value);
     const fitClass = options.fit === false ? "" : textFitClass(value, options.mediumAt, options.longAt);
     const classes = `paulo-template__field paulo-template__${name}${fitClass}${extraClass}`;
     return `<${tag} class="${classes}" aria-label="${escapeHTML(label)}">${escapeHTML(displayValue)}</${tag}>`;
+  }
+
+  function pauloInfoCard(name, value, label, icon, options = {}) {
+    const displayValue = displayPublicText(value);
+    const fitClass = textFitClass(value, options.mediumAt, options.longAt);
+    return `<div class="paulo-template__info-card paulo-template__${name}${fitClass}" aria-label="${escapeHTML(label)}">
+      <span class="paulo-template__info-icon" aria-hidden="true">${iconSVG(icon)}</span>
+      <span class="paulo-template__info-copy">
+        <span class="paulo-template__info-label">${escapeHTML(label)}</span>
+        <strong>${escapeHTML(displayValue)}</strong>
+      </span>
+    </div>`;
   }
 
   function metricNumber(researcher, key) {
@@ -799,20 +815,12 @@
     return PRIMARY_METRICS.map((metric) => buildMetricCandidate(researcher, metric) || fallback.shift() || null);
   }
 
-  function pauloMetricCaption(slot, metric) {
-    return `<div class="paulo-template__metric-caption paulo-template__metric-caption--${slot}${metric ? "" : " is-empty"}" aria-hidden="true">
-      ${metric ? `${iconSVG(metric.icon)}<span>${escapeHTML(metric.label)}</span>` : ""}
+  function pauloMetricCard(slot, metric) {
+    const emptyClass = metric ? "" : " is-empty";
+    return `<div class="paulo-template__metric-card paulo-template__metric-card--${slot}${emptyClass}" aria-label="${escapeHTML(metric?.label || "Indicador")}">
+      ${metric ? `<span class="paulo-template__metric-head">${iconSVG(metric.icon)}<span>${escapeHTML(metric.label)}</span></span>
+      <strong>${escapeHTML(metric.value)}</strong>` : ""}
     </div>`;
-  }
-
-  function pauloMetricField(slot, metric) {
-    return pauloTextField(slot, metric?.value || "", metric?.label || "Indicador", {
-      tag: "strong",
-      mediumAt: 6,
-      longAt: 10,
-      className: metric ? "" : "is-empty",
-      allowEmpty: true
-    });
   }
 
   function readLoveCounts() {
@@ -876,7 +884,6 @@
     const photo = lattesPhotoURL(selected);
     const institution = `${selected.instituicao}${selected.sigla && selected.sigla !== selected.instituicao ? ` • ${selected.sigla}` : ""}`;
     const profileMeta = [selected.sigla, selected.cidade].filter(Boolean).join(" • ");
-    const metricSlots = ["publications", "citations", "hindex"];
     const metrics = buildShowcaseMetrics(selected);
     const visibleMetrics = metrics.filter(Boolean);
     const themeAction = selected.tematica && selected.tematica !== "Temática não informada"
@@ -895,20 +902,20 @@
           ${profileMeta ? `<span>${escapeHTML(profileMeta)}</span>` : ""}
         </div>
         ${loveButtonMarkup(selected)}
-        ${pauloTextField("area", selected.area, "Área de atuação", { mediumAt: 22, longAt: 40 })}
-        ${pauloTextField("degree", selected.graduacao, "Grau de formação", { mediumAt: 20, longAt: 34 })}
+        ${pauloInfoCard("area", selected.area, "Área de atuação", "flask", { mediumAt: 22, longAt: 40 })}
+        ${pauloInfoCard("degree", selected.graduacao, "Grau de formação", "degree", { mediumAt: 20, longAt: 34 })}
         ${pauloTextField("bio", abstract, "Resumo da pesquisadora", { tag: "div", fit: false })}
-        ${pauloTextField("institution", institution, "Instituição", { mediumAt: 42, longAt: 78 })}
-        ${pauloTextField("city", selected.cidade, "Cidade de atuação", { mediumAt: 24, longAt: 42 })}
-        ${metricSlots.map((slot, index) => pauloMetricCaption(slot, metrics[index])).join("")}
-        ${metricSlots.map((slot, index) => pauloMetricField(slot, metrics[index])).join("")}
+        ${pauloInfoCard("institution", institution, "Instituição", "institution", { mediumAt: 42, longAt: 78 })}
+        ${pauloInfoCard("city", selected.cidade, "Cidade de atuação", "location", { mediumAt: 24, longAt: 42 })}
+        <div class="paulo-template__metrics-mask" aria-hidden="true"></div>
+        ${visibleMetrics.map((metric, index) => pauloMetricCard(`count${visibleMetrics.length}-${index}`, metric)).join("")}
         ${pauloTextField("post", highlight, "Destaques", { mediumAt: 82, longAt: 112 })}
         <dl class="sr-only">
           <dt>Nome</dt><dd>${escapeHTML(selected.nome)}</dd>
           <dt>Área de atuação</dt><dd>${escapeHTML(displayOrFallback(selected.area))}</dd>
           <dt>Grau de formação</dt><dd>${escapeHTML(displayOrFallback(selected.graduacao))}</dd>
-          <dt>Resumo da pesquisadora</dt><dd>${escapeHTML(abstract)}</dd>
-          <dt>Instituição</dt><dd>${escapeHTML(displayOrFallback(institution))}</dd>
+          <dt>Resumo da pesquisadora</dt><dd>${escapeHTML(displayPublicText(abstract))}</dd>
+          <dt>Instituição</dt><dd>${escapeHTML(displayPublicText(institution))}</dd>
           <dt>Cidade de atuação</dt><dd>${escapeHTML(displayOrFallback(selected.cidade))}</dd>
           ${visibleMetrics.length
             ? visibleMetrics.map((metric) => `<dt>${escapeHTML(metric.label)}</dt><dd>${escapeHTML(metric.value)}</dd>`).join("")

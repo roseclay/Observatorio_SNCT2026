@@ -666,6 +666,12 @@ body[data-page="perfil"] .internal-shell {
   border-radius: 1.5cqw;
 }
 
+.paulo-template__metrics-mask--count1,
+.paulo-template__metrics-mask--count2 {
+  top: 58.05%;
+  height: 15.2%;
+}
+
 .paulo-template__metric-card {
   position: absolute;
   z-index: 5;
@@ -680,6 +686,13 @@ body[data-page="perfil"] .internal-shell {
   border: 1px solid rgba(255,255,255,.92);
   border-radius: 1.35cqw;
   box-shadow: 0 .55cqw 1.35cqw rgba(20,22,95,.08), inset 0 0 0 1px rgba(116,86,223,.05);
+}
+
+.paulo-template__metric-card--count1-0,
+.paulo-template__metric-card--count2-0,
+.paulo-template__metric-card--count2-1 {
+  top: 59.15%;
+  height: 11.95%;
 }
 
 .paulo-template__metric-head {

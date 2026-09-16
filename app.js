@@ -908,7 +908,7 @@
         ${pauloTextField("bio", abstract, "Resumo da pesquisadora", { tag: "div", fit: false })}
         ${pauloInfoCard("institution", institution, "Instituição", "institution", { mediumAt: 42, longAt: 78 })}
         ${pauloInfoCard("city", selected.cidade, "Cidade de atuação", "location", { mediumAt: 24, longAt: 42 })}
-        <div class="paulo-template__metrics-mask" aria-hidden="true"></div>
+        <div class="paulo-template__metrics-mask paulo-template__metrics-mask--count${visibleMetrics.length}" aria-hidden="true"></div>
         ${visibleMetrics.map((metric, index) => pauloMetricCard(`count${visibleMetrics.length}-${index}`, metric)).join("")}
         ${pauloTextField("post", highlight, "Destaques", { mediumAt: 82, longAt: 112 })}
         <dl class="sr-only">

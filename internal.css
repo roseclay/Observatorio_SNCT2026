@@ -667,7 +667,8 @@ body[data-page="perfil"] .internal-shell {
 }
 
 .paulo-template__metrics-mask--count1,
-.paulo-template__metrics-mask--count2 {
+.paulo-template__metrics-mask--count2,
+.paulo-template__metrics-mask--count3 {
   top: 58.05%;
   height: 15.2%;
 }
@@ -690,7 +691,10 @@ body[data-page="perfil"] .internal-shell {
 
 .paulo-template__metric-card--count1-0,
 .paulo-template__metric-card--count2-0,
-.paulo-template__metric-card--count2-1 {
+.paulo-template__metric-card--count2-1,
+.paulo-template__metric-card--count3-0,
+.paulo-template__metric-card--count3-1,
+.paulo-template__metric-card--count3-2 {
   top: 59.15%;
   height: 11.95%;
 }

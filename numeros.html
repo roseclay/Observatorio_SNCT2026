@@ -9,6 +9,7 @@
     <title>Ciência em números • Ciência Delas</title>
     <link rel="stylesheet" href="internal.css" />
     <script src="app.js" defer></script>
+    <script src="numeros-gallery.js" defer></script>
   </head>
   <body class="internal-page numbers-page" data-page="numeros">
     <main class="internal-shell numbers-shell">
@@ -34,20 +35,39 @@
         <div class="numbers-gallery__header">
           <div>
             <span class="section-tag">01 • INFOGRÁFICOS</span>
-            <h2 id="gallery-title">Panorama Ciência Delas</h2>
-            <p>O infográfico principal reúne os dados essenciais em uma visualização única e amigável.</p>
+            <h2 id="gallery-title" data-gallery-title>Panorama Ciência Delas</h2>
+            <p data-gallery-description>O infográfico principal reúne os dados essenciais em uma visualização única e amigável.</p>
           </div>
           <div class="numbers-gallery__album" aria-label="Outros infográficos">
-            <button class="numbers-gallery__thumb is-active" type="button" aria-current="true">
+            <button class="numbers-gallery__thumb is-active" type="button" aria-current="true"
+              data-infographic-src="assets/infograficos/ciencia-delas-infografico-01.png"
+              data-infographic-title="Panorama Ciência Delas"
+              data-infographic-description="O infográfico principal reúne os dados essenciais em uma visualização única e amigável."
+              data-infographic-alt="Infográfico Ciência Delas com indicadores sobre pesquisadoras, instituições, áreas, produção científica e tecnológica.">
               <img src="assets/infograficos/ciencia-delas-infografico-01.png" alt="" />
               <span>Panorama geral</span>
             </button>
-            <span class="numbers-gallery__placeholder">Próximos infográficos</span>
+            <button class="numbers-gallery__thumb" type="button"
+              data-infographic-src="assets/infograficos/ciencia-delas-infografico-02.png"
+              data-infographic-title="Produção e impacto"
+              data-infographic-description="Indicadores visuais sobre produção científica, citações e circulação do conhecimento."
+              data-infographic-alt="Infográfico Ciência Delas sobre produção científica, citações e indicadores de impacto.">
+              <img src="assets/infograficos/ciencia-delas-infografico-02.png" alt="" />
+              <span>Produção e impacto</span>
+            </button>
+            <button class="numbers-gallery__thumb" type="button"
+              data-infographic-src="assets/infograficos/ciencia-delas-infografico-03.png"
+              data-infographic-title="Instituições e áreas"
+              data-infographic-description="Um recorte visual das instituições, áreas de atuação e distribuição das pesquisadoras."
+              data-infographic-alt="Infográfico Ciência Delas sobre instituições, áreas de atuação e distribuição das pesquisadoras.">
+              <img src="assets/infograficos/ciencia-delas-infografico-03.png" alt="" />
+              <span>Instituições e áreas</span>
+            </button>
           </div>
         </div>
 
         <figure class="numbers-gallery__stage">
-          <img src="assets/infograficos/ciencia-delas-infografico-01.png" alt="Infográfico Ciência Delas com indicadores sobre pesquisadoras, instituições, áreas, produção científica e tecnológica." />
+          <img data-gallery-image src="assets/infograficos/ciencia-delas-infografico-01.png" alt="Infográfico Ciência Delas com indicadores sobre pesquisadoras, instituições, áreas, produção científica e tecnológica." />
         </figure>
       </section>
 

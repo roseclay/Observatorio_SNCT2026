@@ -5,6 +5,7 @@
   const JSON_URL = "data/dados_simcc_completo.json";
   const PAULO_TEMPLATE_IMAGE = "assets/descubra-cientista-paulo-mobile-v2.png";
   const INACTIVITY_DELAY = 60_000;
+  const RESEARCHER_PAGE_SIZE = 10;
   const SHOWCASE_METRIC_THRESHOLDS = {
     publications: 10,
     citations: 100,
@@ -25,6 +26,7 @@
   const INSTITUTION_LOGOS = {
     EBMSP: "assets/instituicoes/ebmsp.png",
     "FIOCRUZ-BA": "assets/instituicoes/fiocruz-ba.png",
+    IFBA: "assets/instituicoes/ifba.png",
     UNEB: "assets/instituicoes/uneb.png",
     UEFS: "assets/instituicoes/uefs.png",
     UESC: "assets/instituicoes/uesc.png",
@@ -507,8 +509,61 @@
     const listingTitle = document.querySelector("#listing-title");
     const institutionGrid = document.querySelector("#institution-grid");
     const institutionCount = document.querySelector("#institution-count");
+    const pagination = document.querySelector("#researcher-pagination");
     const groups = institutionGroups();
     let selectedInstitution = params.get("instituicao") || "";
+    let currentPage = Math.max(1, Number(params.get("pagina")) || 1);
+
+    const updateListingURL = () => {
+      const nextParams = new URLSearchParams();
+      if (selectedInstitution) nextParams.set("instituicao", selectedInstitution);
+      if (currentPage > 1) nextParams.set("pagina", String(currentPage));
+      const query = nextParams.toString();
+      window.history.replaceState({}, "", query ? `cientistas.html?${query}` : "cientistas.html");
+    };
+
+    const renderPagination = (totalPages) => {
+      if (!pagination) return;
+      if (totalPages <= 1) {
+        pagination.innerHTML = "";
+        return;
+      }
+
+      const pages = [];
+      const addPage = (pageNumber) => {
+        if (pageNumber >= 1 && pageNumber <= totalPages && !pages.includes(pageNumber)) {
+          pages.push(pageNumber);
+        }
+      };
+      addPage(1);
+      for (let pageNumber = currentPage - 2; pageNumber <= currentPage + 2; pageNumber += 1) addPage(pageNumber);
+      addPage(totalPages);
+      pages.sort((a, b) => a - b);
+
+      const pageButtons = [];
+      let previous = 0;
+      pages.forEach((pageNumber) => {
+        if (previous && pageNumber - previous > 1) {
+          pageButtons.push('<span class="pagination__ellipsis" aria-hidden="true">...</span>');
+        }
+        pageButtons.push(`<button class="${pageNumber === currentPage ? "is-active" : ""}" type="button" data-page="${pageNumber}" ${pageNumber === currentPage ? 'aria-current="page"' : ""}>${pageNumber}</button>`);
+        previous = pageNumber;
+      });
+
+      pagination.innerHTML = `
+        <button type="button" data-page="${Math.max(1, currentPage - 1)}" ${currentPage === 1 ? "disabled" : ""}>Anterior</button>
+        ${pageButtons.join("")}
+        <button type="button" data-page="${Math.min(totalPages, currentPage + 1)}" ${currentPage === totalPages ? "disabled" : ""}>Próxima</button>
+      `;
+      pagination.querySelectorAll("[data-page]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const nextPage = Number(button.dataset.page);
+          if (!Number.isFinite(nextPage) || nextPage === currentPage) return;
+          currentPage = nextPage;
+          applyFilters(true);
+        });
+      });
+    };
 
     const renderInstitutions = () => {
       if (!institutionGrid) return;
@@ -534,14 +589,14 @@
       institutionGrid.querySelectorAll("[data-institution]").forEach((button) => {
         button.addEventListener("click", () => {
           selectedInstitution = button.dataset.institution;
-          const nextURL = selectedInstitution ? `cientistas.html?instituicao=${encodeURIComponent(selectedInstitution)}` : "cientistas.html";
-          window.history.replaceState({}, "", nextURL);
+          currentPage = 1;
+          updateListingURL();
           applyFilters();
         });
       });
     };
 
-    const applyFilters = () => {
+    const applyFilters = (shouldScroll = false) => {
       const term = search.value.trim().toLocaleLowerCase("pt-BR");
       const selectedGroup = groups.find((group) => group.label === selectedInstitution);
       listingTitle.textContent = selectedGroup
@@ -557,18 +612,33 @@
         return searchable.includes(term) && institutionMatch;
       });
 
-      count.textContent = `${filtered.length} ${filtered.length === 1 ? "pesquisadora encontrada" : "pesquisadoras encontradas"}`;
+      const totalPages = Math.max(1, Math.ceil(filtered.length / RESEARCHER_PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * RESEARCHER_PAGE_SIZE;
+      const pageItems = filtered.slice(start, start + RESEARCHER_PAGE_SIZE);
+      updateListingURL();
+      count.textContent = filtered.length
+        ? `${filtered.length} ${filtered.length === 1 ? "pesquisadora encontrada" : "pesquisadoras encontradas"} • página ${currentPage} de ${totalPages}`
+        : "Nenhuma pesquisadora encontrada";
       grid.innerHTML = filtered.length
-        ? filtered.map(renderResearcherCard).join("")
+        ? pageItems.map(renderResearcherCard).join("")
         : '<div class="empty-state"><h3>Nenhum resultado encontrado</h3><p>Tente ajustar ou limpar os filtros.</p></div>';
       bindResearcherCards(grid);
+      renderPagination(totalPages);
       renderInstitutions();
+      if (shouldScroll) {
+        document.querySelector("#results-title")?.scrollIntoView({ block: "start", behavior: reducedMotion ? "auto" : "smooth" });
+      }
     };
 
-    search.addEventListener("input", applyFilters);
+    search.addEventListener("input", () => {
+      currentPage = 1;
+      applyFilters();
+    });
     document.querySelector("#clear-filters").addEventListener("click", () => {
       search.value = "";
       selectedInstitution = "";
+      currentPage = 1;
       window.history.replaceState({}, "", "cientistas.html");
       applyFilters();
     });
@@ -596,10 +666,9 @@
 
   function renderThemeCard(theme, count, isActive = false) {
     return `<button class="explore-card${isActive ? " is-active" : ""}" type="button" data-theme="${escapeHTML(theme)}" aria-pressed="${isActive ? "true" : "false"}">
-      <span class="explore-card__icon" aria-hidden="true">✦</span>
       <h3>${escapeHTML(theme)}</h3>
       <p>${escapeHTML(themeDescriptions[theme] || "Uma rede de pesquisas e conexões científicas.")}</p>
-      <span class="explore-card__footer"><span>${count} ${count === 1 ? "pesquisadora" : "pesquisadoras"}</span><span>Ver perfis →</span></span>
+      <span class="explore-card__footer"><span>${count} ${count === 1 ? "pesquisadora" : "pesquisadoras"}</span></span>
     </button>`;
   }
 
@@ -611,28 +680,41 @@
     const selectionCount = document.querySelector("#theme-result-count");
     const selectionGrid = document.querySelector("#theme-researchers");
     const areas = ["Todas as áreas", ...uniqueAreas()];
-    let activeArea = "Todas as áreas";
-    let activeTheme = params.get("tematica") || "";
+    let activeArea = params.get("area") || "Todas as áreas";
+    if (!areas.includes(activeArea)) activeArea = "Todas as áreas";
+    const activeThemes = new Set((params.get("tematica") || "").split("|").map(decodeURIComponent).filter(Boolean));
 
     const currentAreaResearchers = () => activeArea === "Todas as áreas"
       ? researchers
       : researchers.filter((item) => (item.areas?.length ? item.areas : [item.area]).includes(activeArea));
 
-    chipRow.innerHTML = areas.map((area, index) => `<button class="chip${index === 0 ? " is-active" : ""}" type="button" data-area="${escapeHTML(area)}">${escapeHTML(area)}</button>`).join("");
+    const updateThemeURL = () => {
+      const nextParams = new URLSearchParams();
+      if (activeArea !== "Todas as áreas") nextParams.set("area", activeArea);
+      if (activeThemes.size) nextParams.set("tematica", [...activeThemes].join("|"));
+      const query = nextParams.toString();
+      window.history.replaceState({}, "", query ? `tematicas.html?${query}` : "tematicas.html");
+    };
+
+    chipRow.innerHTML = areas.map((area) => `<button class="chip${area === activeArea ? " is-active" : ""}" type="button" data-area="${escapeHTML(area)}">${escapeHTML(area)}</button>`).join("");
 
     const renderSelectedTheme = (shouldScroll = false) => {
       if (!selection || !selectionGrid) return;
-      if (!activeTheme) {
+      if (!activeThemes.size && activeArea === "Todas as áreas") {
         selection.hidden = true;
         selectionGrid.innerHTML = "";
         return;
       }
 
       const selectedResearchers = currentAreaResearchers()
-        .filter((item) => item.tematica === activeTheme)
+        .filter((item) => !activeThemes.size || activeThemes.has(item.tematica))
         .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
       selection.hidden = false;
-      if (selectionTitle) selectionTitle.textContent = activeTheme;
+      if (selectionTitle) {
+        selectionTitle.textContent = activeThemes.size
+          ? activeThemes.size === 1 ? [...activeThemes][0] : `${activeThemes.size} subtemas selecionados`
+          : activeArea;
+      }
       if (selectionCount) {
         selectionCount.textContent = `${selectedResearchers.length} ${selectedResearchers.length === 1 ? "pesquisadora" : "pesquisadoras"}`;
       }
@@ -646,18 +728,23 @@
     const draw = (shouldScroll = false) => {
       const subset = currentAreaResearchers();
       const totals = subset.reduce((map, item) => map.set(item.tematica, (map.get(item.tematica) || 0) + 1), new Map());
-      if (activeTheme && !totals.has(activeTheme)) activeTheme = "";
+      [...activeThemes].forEach((theme) => {
+        if (!totals.has(theme)) activeThemes.delete(theme);
+      });
       grid.innerHTML = [...totals]
         .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"))
-        .map(([theme, total]) => renderThemeCard(theme, total, theme === activeTheme))
+        .map(([theme, total]) => renderThemeCard(theme, total, activeThemes.has(theme)))
         .join("") || '<div class="empty-state"><h3>Nenhuma temática nesta área</h3></div>';
       grid.querySelectorAll("[data-theme]").forEach((card) => {
         card.addEventListener("click", () => {
-          activeTheme = card.dataset.theme;
-          window.history.replaceState({}, "", `tematicas.html?tematica=${encodeURIComponent(activeTheme)}`);
+          const theme = card.dataset.theme;
+          if (activeThemes.has(theme)) activeThemes.delete(theme);
+          else activeThemes.add(theme);
+          updateThemeURL();
           draw(true);
         });
       });
+      updateThemeURL();
       renderSelectedTheme(shouldScroll);
     };
 
@@ -666,7 +753,8 @@
       if (!chip) return;
       activeArea = chip.dataset.area;
       chipRow.querySelectorAll(".chip").forEach((item) => item.classList.toggle("is-active", item === chip));
-      draw();
+      updateThemeURL();
+      draw(true);
     });
     draw();
   }

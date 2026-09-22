@@ -124,7 +124,17 @@
   function displayInstitutionName(value) {
     const text = validText(value);
     if (!text) return null;
-    return text.toLocaleLowerCase("pt-BR");
+    const lowercaseWords = new Set(["da", "de", "do", "das", "dos", "e"]);
+    return text
+      .toLocaleLowerCase("pt-BR")
+      .replace(/(^|\s|-)\S/g, (match) => {
+        const prefix = match.slice(0, -1);
+        const letter = match.slice(-1);
+        return `${prefix}${letter.toLocaleUpperCase("pt-BR")}`;
+      })
+      .replace(/\b(da|de|do|das|dos|e)\b/gi, (word) => lowercaseWords.has(word.toLocaleLowerCase("pt-BR"))
+        ? word.toLocaleLowerCase("pt-BR")
+        : word);
   }
 
   function parseCSV(text) {

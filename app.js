@@ -124,7 +124,7 @@
   function displayInstitutionName(value) {
     const text = validText(value);
     if (!text) return null;
-    return text.replace(/\b(da|de|do|das|dos|e)\b/gi, (word) => word.toLocaleLowerCase("pt-BR"));
+    return text.toLocaleLowerCase("pt-BR");
   }
 
   function parseCSV(text) {

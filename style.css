@@ -158,15 +158,15 @@ h1 em {
 }
 
 .hero__scope {
-  max-width: 680px;
-  margin: 1rem 0 0;
-  padding: 12px 16px;
+  max-width: 610px;
+  margin: .85rem 0 0;
+  padding: 9px 13px;
   color: #34356f;
   background: rgba(255,255,255,.64);
   border: 1px solid rgba(116,86,223,.16);
   border-left: 3px solid var(--magenta);
   border-radius: 12px;
-  font-size: clamp(.82rem, 1.25vw, .98rem);
+  font-size: clamp(.78rem, 1.1vw, .9rem);
   font-weight: 620;
   line-height: 1.42;
 }

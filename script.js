@@ -1,6 +1,5 @@
 (() => {
   const CSV_URL = "data/pesquisadoras.csv";
-  const ATTRACTION_DELAY = 40_000;
   const CAROUSEL_MIN_PHOTOS = 8;
   const CAROUSEL_PHOTO_TIMEOUT = 7_000;
   const CAROUSEL_APPROVED_PHOTO_IDS = new Set([
@@ -124,7 +123,6 @@
     tematicas: "tematicas.html",
     numeros: "numeros.html"
   };
-  let attractionTimer;
   let lastFocusedElement = null;
 
   const escapeHTML = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({
@@ -284,13 +282,6 @@
     }
   }
 
-  const showAttraction = () => {
-    lastFocusedElement = document.activeElement;
-    attraction.classList.add("is-visible");
-    attraction.setAttribute("aria-hidden", "false");
-    attractionButton.focus({ preventScroll: true });
-  };
-
   const hideAttraction = () => {
     attraction.classList.remove("is-visible");
     attraction.setAttribute("aria-hidden", "true");
@@ -298,16 +289,6 @@
     if (lastFocusedElement instanceof HTMLElement) {
       lastFocusedElement.focus({ preventScroll: true });
     }
-  };
-
-  const restartAttractionTimer = () => {
-    window.clearTimeout(attractionTimer);
-    attractionTimer = window.setTimeout(showAttraction, ATTRACTION_DELAY);
-  };
-
-  const registerActivity = () => {
-    if (attraction.classList.contains("is-visible")) return;
-    restartAttractionTimer();
   };
 
   const animateTouch = (event) => {
@@ -340,26 +321,16 @@
 
   attractionButton.addEventListener("click", () => {
     hideAttraction();
-    restartAttractionTimer();
   });
 
   attraction.addEventListener("click", (event) => {
     if (event.target === attraction) attractionButton.click();
   });
 
-  ["pointerdown", "keydown", "wheel"].forEach((eventName) => {
-    document.addEventListener(eventName, registerActivity, { passive: true });
-  });
-
   document.addEventListener("pointerdown", animateTouch, { passive: true });
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) window.clearTimeout(attractionTimer);
-    else restartAttractionTimer();
-  });
 
   window.addEventListener("load", () => {
     document.body.classList.add("is-ready");
-    restartAttractionTimer();
     initializeScientistCarousel();
   });
 })();

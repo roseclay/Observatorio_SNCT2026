@@ -4,7 +4,6 @@
   const CSV_URL = "data/pesquisadoras.csv";
   const JSON_URL = "data/dados_simcc_completo.json";
   const PAULO_TEMPLATE_IMAGE = "assets/descubra-cientista-paulo-mobile-v2.png";
-  const INACTIVITY_DELAY = 60_000;
   const RESEARCHER_PAGE_SIZE = 10;
   const SHOWCASE_METRIC_THRESHOLDS = {
     publications: 10,
@@ -44,7 +43,6 @@
   let researchers = [];
   let dataSourceLabel = "";
   let currentProfileId = null;
-  let inactivityTimer;
 
   const escapeHTML = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({
     "&": "&amp;",
@@ -121,6 +119,12 @@
     const key = areaKey(text);
     if (areaLabels[key]) return areaLabels[key];
     return text.toLocaleLowerCase("pt-BR").replace(/(^|\s)\S/g, (letter) => letter.toLocaleUpperCase("pt-BR"));
+  }
+
+  function displayInstitutionName(value) {
+    const text = validText(value);
+    if (!text) return null;
+    return text.replace(/\b(da|de|do|das|dos|e)\b/gi, (word) => word.toLocaleLowerCase("pt-BR"));
   }
 
   function parseCSV(text) {
@@ -238,8 +242,8 @@
       tematica: pick(record, "tematica_ia", "TEMÁTICA IA") || "Temática não informada",
       tema: pick(record, "tema_ia", "TEMA IA"),
       cidade: pick(record, "cidade", "city") || "Cidade não informada",
-      instituicao: institution || "Instituição não informada",
-      sigla: sigla || institution || "Instituição",
+      instituicao: displayInstitutionName(institution) || "Instituição não informada",
+      sigla: sigla || displayInstitutionName(institution) || "Instituição",
       resumo: pick(record, "biografia", "abstract", "abstract_ai") || "Informação biográfica não disponível na base.",
       abstractAI: pick(record, "abstract_ai"),
       artigos: toNumber(pick(record, "artigos", "articles")),
@@ -682,7 +686,7 @@
     const areas = ["Todas as áreas", ...uniqueAreas()];
     let activeArea = params.get("area") || "Todas as áreas";
     if (!areas.includes(activeArea)) activeArea = "Todas as áreas";
-    const activeThemes = new Set((params.get("tematica") || "").split("|").map(decodeURIComponent).filter(Boolean));
+    let activeTheme = (params.get("tematica") || "").split("|").filter(Boolean)[0] || "";
 
     const currentAreaResearchers = () => activeArea === "Todas as áreas"
       ? researchers
@@ -691,7 +695,7 @@
     const updateThemeURL = () => {
       const nextParams = new URLSearchParams();
       if (activeArea !== "Todas as áreas") nextParams.set("area", activeArea);
-      if (activeThemes.size) nextParams.set("tematica", [...activeThemes].join("|"));
+      if (activeTheme) nextParams.set("tematica", activeTheme);
       const query = nextParams.toString();
       window.history.replaceState({}, "", query ? `tematicas.html?${query}` : "tematicas.html");
     };
@@ -700,20 +704,18 @@
 
     const renderSelectedTheme = (shouldScroll = false) => {
       if (!selection || !selectionGrid) return;
-      if (!activeThemes.size && activeArea === "Todas as áreas") {
+      if (!activeTheme && activeArea === "Todas as áreas") {
         selection.hidden = true;
         selectionGrid.innerHTML = "";
         return;
       }
 
       const selectedResearchers = currentAreaResearchers()
-        .filter((item) => !activeThemes.size || activeThemes.has(item.tematica))
+        .filter((item) => !activeTheme || item.tematica === activeTheme)
         .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
       selection.hidden = false;
       if (selectionTitle) {
-        selectionTitle.textContent = activeThemes.size
-          ? activeThemes.size === 1 ? [...activeThemes][0] : `${activeThemes.size} subtemas selecionados`
-          : activeArea;
+        selectionTitle.textContent = activeTheme || activeArea;
       }
       if (selectionCount) {
         selectionCount.textContent = `${selectedResearchers.length} ${selectedResearchers.length === 1 ? "pesquisadora" : "pesquisadoras"}`;
@@ -728,18 +730,15 @@
     const draw = (shouldScroll = false) => {
       const subset = currentAreaResearchers();
       const totals = subset.reduce((map, item) => map.set(item.tematica, (map.get(item.tematica) || 0) + 1), new Map());
-      [...activeThemes].forEach((theme) => {
-        if (!totals.has(theme)) activeThemes.delete(theme);
-      });
+      if (activeTheme && !totals.has(activeTheme)) activeTheme = "";
       grid.innerHTML = [...totals]
         .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"))
-        .map(([theme, total]) => renderThemeCard(theme, total, activeThemes.has(theme)))
+        .map(([theme, total]) => renderThemeCard(theme, total, theme === activeTheme))
         .join("") || '<div class="empty-state"><h3>Nenhuma temática nesta área</h3></div>';
       grid.querySelectorAll("[data-theme]").forEach((card) => {
         card.addEventListener("click", () => {
           const theme = card.dataset.theme;
-          if (activeThemes.has(theme)) activeThemes.delete(theme);
-          else activeThemes.add(theme);
+          activeTheme = activeTheme === theme ? "" : theme;
           updateThemeURL();
           draw(true);
         });
@@ -991,7 +990,7 @@
           ${profileMeta ? `<span>${escapeHTML(profileMeta)}</span>` : ""}
         </div>
         ${loveButtonMarkup(selected)}
-        ${pauloInfoCard("area", selected.area, "Área de atuação", "flask", { mediumAt: 22, longAt: 40 })}
+        ${pauloInfoCard("area", selected.area, "Área de atuação", "flask", { mediumAt: 18, longAt: 25 })}
         ${pauloInfoCard("degree", selected.graduacao, "Grau de formação", "degree", { mediumAt: 20, longAt: 34 })}
         ${pauloTextField("bio", abstract, "Resumo da pesquisadora", { tag: "div", fit: false })}
         ${pauloInfoCard("institution", institution, "Instituição", "institution", { mediumAt: 42, longAt: 78 })}
@@ -1065,17 +1064,6 @@
     document.querySelectorAll("[data-back]").forEach((button) => button.addEventListener("click", goBack));
   }
 
-  function startInactivityTimer() {
-    const restart = () => {
-      window.clearTimeout(inactivityTimer);
-      inactivityTimer = window.setTimeout(goHome, INACTIVITY_DELAY);
-    };
-    ["pointerdown", "keydown", "wheel", "touchstart"].forEach((eventName) => {
-      document.addEventListener(eventName, restart, { passive: true });
-    });
-    restart();
-  }
-
   async function initializeDataPage(renderer) {
     setLoadingState();
     try {
@@ -1093,6 +1081,4 @@
   if (page === "tematicas") initializeDataPage(renderTematicas);
   if (page === "territorio") initializeDataPage(renderTerritorio);
   if (page === "perfil") initializeDataPage(() => renderProfile());
-
-  startInactivityTimer();
 })();

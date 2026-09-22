@@ -660,7 +660,9 @@ body[data-page="perfil"] .internal-shell {
   font-weight: 900;
   line-height: 1.08;
   overflow: hidden;
-  overflow-wrap: break-word;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
   text-wrap: balance;
   -webkit-line-clamp: 2;
 }
@@ -680,7 +682,36 @@ body[data-page="perfil"] .internal-shell {
   top: 21.58%;
   width: 24.25%;
   height: 7.2%;
-  padding: 1.25cqw 1.2cqw 1.15cqw 1.45cqw;
+  gap: .85cqw;
+  padding: 1.25cqw .8cqw 1.15cqw 1.05cqw;
+}
+
+.paulo-template__area .paulo-template__info-icon {
+  width: min(3.45cqw, 2.05rem);
+  height: min(3.45cqw, 2.05rem);
+}
+
+.paulo-template__area .paulo-template__info-copy {
+  min-width: 0;
+}
+
+.paulo-template__area .paulo-template__info-copy strong {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  text-wrap: nowrap;
+  text-overflow: clip;
+  font-size: min(1.42cqw, .84rem);
+  line-height: 1;
+  -webkit-line-clamp: unset;
+}
+
+.paulo-template__area.is-medium .paulo-template__info-copy strong {
+  font-size: min(1.16cqw, .72rem);
+}
+
+.paulo-template__area.is-long .paulo-template__info-copy strong {
+  font-size: min(.88cqw, .58rem);
 }
 
 .paulo-template__degree {

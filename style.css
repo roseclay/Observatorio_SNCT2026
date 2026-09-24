@@ -354,6 +354,15 @@ h1 em {
   gap: clamp(12px, 1.8vh, 19px);
 }
 
+.menu-note {
+  max-width: 780px;
+  margin: clamp(18px, 2.4vh, 26px) 0 0;
+  color: var(--ink-soft);
+  font-size: clamp(.86rem, 1.35vw, 1rem);
+  font-weight: 600;
+  line-height: 1.48;
+}
+
 .nav-card {
   --card-accent: var(--violet);
   position: relative;
